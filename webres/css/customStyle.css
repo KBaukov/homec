@@ -1,0 +1,332 @@
+.thumb{
+        padding: 3px;
+}
+.fon { color: #DFE8F6; }
+.thumb img{
+        height: 32px;
+        width: 32px;
+}
+.thumb-wrap{
+        float: left;
+        margin: 4px;
+        margin-right: 0;
+        padding: 5px;
+        text-align:center;
+        cursor:pointer;
+}
+.thumb-wrap span{
+        display: block;
+        overflow: hidden;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        text-align: center;
+        width: 100px;
+        height: 50px;
+}
+.x-view-over{
+        border:1px solid #dddddd;
+        background: #efefef;
+        padding: 4px;
+}
+
+.x-form-item-label {
+    color: #15428B;
+    font-weight: bolder;
+}
+
+/*
+.x-panel-default-framed, .bbarLabel {
+    background-color: #cbddf3;
+} */
+
+.x-view-selected{
+        background: #eff5fb;
+        border:1px solid #99bbe8;
+        padding: 4px;
+}
+.x-view-selected .thumb{
+        background:transparent;
+}
+div.pButt { width: 115px; text-align: left; padding-left: 10px;}
+.GridTBTitle {  color:#15428B; font-weight:bold; font-size: 12px;}
+div.detail_header { 
+  font: 11px/15px arial,tahoma,helvetica,sans-serif; 
+  text-align: center; height: 16px; padding: 4px;
+  border-left-color: #EEEEEE;
+  border-right-color: #D0D0D0;
+  background-color: #F9F9F9;
+  background-image: url("extjs/css/images/default/grid/grid3-hrow.gif");
+}
+div.detail_header div {
+  width:52px; float: left; cursor: default;
+}
+
+div.info_label { color:#15428B; float:left; font-weight:bold; font-size: 12px; width:130px; height: 20px; padding: 2px 5px; font-family: arial;}
+div.info_data { float: right; width: 70px; height: 20px;  font-size: 12px; text-align: left; padding: 2px 3px; font-family: arial; color:green;}
+
+div.accept_label { color:#15428B; float:left; font-weight:bold; font-size: 16px; width:270px; height: 40px; padding: 2px 5px; font-family: arial;}
+div.accept_data { float: right; width: 150px; height: 40px;  font-size: 16px; text-align: right; padding: 2px 3px; font-family: arial;}
+div.accept_data input { float: left; width: 100px; height: 20px;  font-size: 16px; text-align: right; font-family: arial; margin-left: 10px;}
+div.tmplHR { height: 5px; border-top: 2px solid #15428B; }
+div.noticePanel {vertical-align: middle !important; text-align: center; color: green; font-weight: bolder; font-size: 16px; padding: 20px; height: 100%; text-decoration: blink;}
+
+div.withd_label { color:#15428B; float:left; font-weight:bold; font-size: 15px; width:280px; height: 30px; padding: 2px 5px; font-family: arial;}
+div.withd_data { float: right; width: 150px; height: 30px;  font-size: 15px; text-align: right; padding: 2px 3px; font-family: arial;}
+div.withd_data input { float: left; width: 100px; height: 20px;  font-size: 15px; text-align: right; font-family: arial; margin-left: 10px;}
+
+div.rate_label { color:#15428B; float:left; font-family: arial; font-size: 10px; width:45px; height: 9px; padding: 2px 5px; cursor: default;}
+div.rate_data { float: left; width: 45px; height: 9px;  font-size: 10px; text-align: right; padding: 2px 3px; font-family: arial; cursor: default;}
+.RowTit { color:#15428B; padding: 2px; font:14px arial,tahoma,helvetica,sans-serif; font-weight:bold;}
+.x-grid3-row-selected, .x-grid3-cell-selected { background-color:#ffff66 !important; }
+.x-tree-node { color: #000000; font: 13px arial,tahoma,helvetica,sans-serif !important; }
+table.x-grid3-summary-table {
+    border-top: 1px solid #99BBE8;
+}
+div.x-grid-group-hd {
+    border-bottom-width: 1px;
+}
+div.in-ostat-footer {
+    border-bottom: 2px solid #8DB2E3; margin-top: -20px; 
+    
+}
+div.out-ostat-footer {
+    border-top: 2px solid #8DB2E3; margin-top: -20px;
+}
+div.in-ostat-footer div, div.out-ostat-footer div {
+  background-color: #ffffff; font-weight: bold; padding: 5px 0 0 130px;height: 20px;
+}
+div.posSumm {
+    font: 11px/13px arial,tahoma,helvetica,sans-serif;
+    overflow: hidden;
+    padding: 4px 3px 3px 5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+}
+td.hdBorder {
+    border-right:1px solid #D0D0D0;
+}
+td.rBorder {
+    border-right:1px solid #EDEDED;
+    border-bottom:1px solid #EDEDED;
+    cursor: default;
+}
+td.rBorder span {
+    cursor: default;
+}
+td.rSelected, div.rSelected{
+    background-color: #FFFF66;
+}
+td.rHover {
+    background-color: #fafafa;
+}
+
+table.calcButt button{
+    font-size: 22px; 
+    font-weight: bold;
+    height: 42px !important;
+}
+table.calcButtCB button{
+    font-size: 22px; 
+    font-weight: bold;
+    height: 42px !important;
+    color: #1530fB;
+}
+table.calcButtCR button{
+    font-size: 22px; 
+    font-weight: bold;
+    height: 42px !important;
+    color: #FF5555;
+}
+table.calcButtCG button{
+    font-size: 30px; 
+    font-weight: bold;
+    height: 42px !important;
+    color: #33aa33;
+}
+
+
+div.recSelected {
+  height: 13px; width:13px;
+  background-image: url("extjs/ext/resources/images/default/form/checkbox.gif");
+  background-position: left 39px top 26px;
+}
+div.recUnSelected {
+  height: 13px; width:13px;
+  background-image: url("extjs/ext/resources/images/default/form/checkbox.gif");
+  background-position: left 39px top 0px;
+}
+div.recDisabled {
+  height: 13px; width:13px;
+  background-image: url("extjs/ext/resources/images/default/form/checkbox.gif");
+  background-position: left 26px top 26px;
+}
+
+div.prText {
+  text-align: right;
+  color: #15428B;
+}
+
+div.fillPr {
+  height: 12px; width:100%;
+  border: 1px solid #ccc;
+  padding: 2px;
+  float: left;
+}
+div.fillPrG{
+  height: 6px; width:1px;
+  background-image: url("../img/fillPrG.png");
+}
+div.fillPrY{
+  height: 6px; width:1px;
+  background-image: url("../img/fillPrY.png");
+}
+div.fillPrR{
+  height: 6px; width:1px;
+  background-image: url("../img/fillPrR.png");
+}
+
+div.shLine {
+    position: absolute;
+    width: 50px;
+    top:60px;
+    left: 150px;
+    text-align: center;
+}
+
+div.shLine div {
+    margin-left: 23px;
+    height: 23px; width:1px;
+    border-left: 1px solid #555;
+}
+
+div#metka3 {
+    top:75px;    
+    color: #ff6600;
+}
+div#metka3:hover {
+    cursor: col-resize;
+}
+div#metka3 div{
+    top:75px;    
+    border-left: 1px solid #ff6600;
+}
+
+
+div#devPict {
+  height: 630px; width:440px;
+  background-image: url("../img/logo_zedplus.svg");
+  background-repeat: no-repeat;
+  position: fixed;
+  bottom: 0px; right: 30px;
+}
+
+input.grNumEditor {
+    text-align: center;
+}
+
+
+.x-grid-row-selected .x-grid-td {
+    background-color: #ffffaa;
+}
+
+
+div#cpBase{
+  height: 455px; width:391px;
+  background-image: url("../img/kotel/CP_base.png");
+}
+
+div#dig1{
+  height: 78px; width:53px;
+  background-image: url("../img/kotel/dr.png");
+  top: 130px; left: 148px;
+  position: absolute;
+}
+div#dig2{
+  height: 78px; width:53px;
+  background-image: url("../img/kotel/dr.png");
+  top: 130px; left: 200px;
+  position: absolute;
+}
+div#dot{
+  height: 13px; width:13px;
+  background-image: url("../img/kotel/drd.png");
+  top: 200px; left: 190px;
+  position: absolute;
+  opacity: 0;
+}
+div#leftButt{
+  height: 62px; width:147px;
+  background-image: url("../img/kotel/leftButt.png");
+  top: 277px; left: 48px;
+  position: absolute;
+  background-position-y: top;
+}
+div#rightButt{
+  height: 62px; width:147px;
+  background-image: url("../img/kotel/rightButt.png");
+  top: 277px; left: 210px;
+  position: absolute;
+  background-position-y: top;
+}
+
+div#mokButt{
+  height: 63px; width:182px;
+  background-image: url("../img/kotel/mokButt.png");
+  top: 353px; left: 112px;
+  position: absolute;
+  background-position-y: top;
+}
+div.led{
+  height: 28px; width:30px;
+  background-image: url("../img/kotel/ledOn.png");
+  top: 56px; 
+  position: absolute;
+  opacity: 1;
+}
+div#led1 { left: 46px; } /*  81, 222, 363, 504 */
+div#led2 { left: 328px; opacity: 1;}
+
+div#rightButt:hover { background-position-y: bottom;}
+div#leftButt:hover { background-position-y: bottom;}
+div#mokButt:hover { background-position-y: bottom;}
+
+
+div.tempIcon {
+    height: 48px;
+    width: 86px;
+    background-image: url("../img/temperature-48.png");
+    background-repeat: no-repeat;
+    background-position: left center;
+    position: absolute;
+    text-align: right;
+    color: #ff6600;
+}
+
+div.kotelIcon {
+    height: 48px;
+    width: 86px;
+    background-image: url("../img/kotel.png");
+    background-repeat: no-repeat;
+    background-position: left center;
+    position: absolute;
+    text-align: right;
+    color: #ff6600;
+}
+
+div#ht1 {
+    top: 100px;
+    left: 300px;
+}
+
+div#ht2 {
+    top: 200px;
+    left: 200px;
+}
+
+/*
+.x-grid3-cell-selected { border: #99BBE8 1px solid !important; }
+.x-grid3-cell  { border: #ffffff 1px solid !important; }
+*/
+
+

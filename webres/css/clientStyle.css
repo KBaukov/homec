@@ -1,0 +1,21 @@
+
+div.client_panel {
+  position: absolute; 
+  top: 200px; left:450px; 
+  height: 400px; width: 750px; 
+  border: 1px solid #777; 
+  background-image:url(../webres/img/wFon.png);
+  padding: 50px;
+}
+div#logo { height: 50px; width: 180px; top: 50px; left: 50px; position: fixed; background-image:url(../webres/img/logo.png);}
+div.client_label { color:#15428B; float:left; font-weight:bold; font-size: 25px; width:400px; height: 80px; padding: 10px 25px; font-family: arial;}
+div.client_data { float: right; width: 270px; height: 80px;  font-size: 25px; text-align: right; padding: 10px 15px; font-family: arial; color:green;}
+div.dataPanel { margin-top: 50px; }
+div.tmplHR { height: 5px; border-top: 2px solid #15428B; }
+
+div#clientPanelTitle { 
+  color:#15428B; font-family: arial; 
+  font-size: 30px; border: 1px solid  #777; 
+  width: 710px; padding: 20px 70px; margin-top: -140px; 
+  margin-left: -50px;background-image:url(../img/wFon.png);
+}

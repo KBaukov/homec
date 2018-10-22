@@ -1,0 +1,12 @@
+{
+    "DbConnectionString": "root:koko@tcp(10.199.28.102:3306)/hc?parseTime=true",
+    "LoggerPath": "._/logs/hc.log",
+	"Server": {
+		"Address": "0.0.0.0",
+		"Port": "8085",
+		"TLS": true,
+		"CertificatePath": "./ssl/server.crt",
+		"KeyPath": "./ssl/server.key"
+	},
+	"WsAllowedOrigin": "HomeControlApp"
+}
