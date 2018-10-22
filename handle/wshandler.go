@@ -27,7 +27,9 @@ func internalError(ws *websocket.Conn, msg string, err error) {
 
 var (
 	WsConnections     = make(map[string]*websocket.Conn)
-	WsAllowedOrigin   = "" //cfg.WsAllowedOrigin
+	//configurationPath = flag.String("config", "config.json", "Путь к файлу конфигурации")
+	//cfg               = config.LoadConfig(*configurationPath)
+	WsAllowedOrigin   = "HomeControlApp" //homec.Cfg.WsAllowedOrigin
 )
 
 var upgrader = websocket.Upgrader{
@@ -35,6 +37,7 @@ var upgrader = websocket.Upgrader{
 		deviceOrigin := r.Header.Get("Origin")
 		if WsAllowedOrigin != deviceOrigin {
 			log.Println("Origin not allowed:", deviceOrigin)
+			log.Println("Origin want:", WsAllowedOrigin)
 			return false
 		}
 		return true

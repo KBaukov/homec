@@ -21,8 +21,7 @@ import (
 
 var (
 	sessStore = sessions.NewCookieStore([]byte("33446a9dcf9ea060a0a6532b166da32f304af0de"))
-	//configurationPath = flag.String("config", "config.json", "Путь к файлу конфигурации")
-	//cfg               = config.LoadConfig(*configurationPath)
+
 )
 func init() {
 	gob.Register(ent.User{})

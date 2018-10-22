@@ -1,2 +1,4 @@
 .idea
 *.exe
+config.json
+/config.json

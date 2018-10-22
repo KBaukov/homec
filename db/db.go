@@ -249,7 +249,7 @@ func (db Database) UpdDevice(id int, devType string, devName string, ip string, 
 	)
 	if devType == "KotelController" {
 		_, kName, _ = db.GetKotelID()
-		if kName != devName {
+		if kName == devName {
 			return false, errors.New("Устройство с типом KotelController уже существует. Такое устройсто может быть только одно.")
 		} else {
 			stmt, err := db.Conn.Prepare(updKotelDevIdQuery)
@@ -266,7 +266,7 @@ func (db Database) UpdDevice(id int, devType string, devName string, ip string, 
 
 	execQuery := updDeviceQuery
 
-	lastId, err := db.GetLastId("device")
+	lastId, err := db.GetLastId("devices")
 	if err != nil {
 		return false, err
 	}
