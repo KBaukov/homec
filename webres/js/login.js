@@ -39,8 +39,8 @@ Ext.onReady(function() {
 
     var win = Ext.create('Ext.Window', {
         title: 'Авторизация',
-            resizable: false, closable: false,
-            width: 280, height: 127,
+        resizable: false, closable: false,
+        width: 280, height: 127,
         plain: true,
         headerPosition: 'top',
         layout: 'border',

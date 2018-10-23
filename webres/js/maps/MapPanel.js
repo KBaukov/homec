@@ -11,9 +11,9 @@ Ext.define('MapPanel', {
         this.autoScroll = true;
         this.bodyPadding = 10;
         this.bodyStyle = 'padding:10px; background: #ffffff'; //#cbddf3;';
-        
+
         this.initForm();
-        
+
         MapPanel.superclass.initComponent.apply(this, arguments);
     },
     initForm: function() {
@@ -96,8 +96,7 @@ Ext.define('MapPanel', {
                   if(ansv.success) {    
                     var sens = Ext.getDom(this.mapData.id+'_sensor_'+ansv.device_id);
                         sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
-                        sens.innerHTML 
-                        = parseFloat(ansv.t) +'°C</br></br>'
+                        sens.innerHTML = parseFloat(ansv.t) +'°C</br></br>'
                         +( (ansv.h!='0.00') ? parseFloat(ansv.h)+'%' : '');
                     
                   } else error_mes('Ошибка', ansv.msg);  
@@ -116,6 +115,8 @@ Ext.define('MapPanel', {
         }
     },
     kotelControl: function(ev) {
-        alert(ev);
+        var cmp = Ext.getCmp('map'+ev.target.id.split('_')[0]);
+        cmp.controllWin  = Ext.create('KotelControlWin');
+        cmp.controllWin.show();
     }
 });

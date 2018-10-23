@@ -7,6 +7,9 @@ Ext.define('MapsTab', {
         this.region = 'center';
         this.mapsData = [];
         this.loadMaps();
+
+        this.items = [];
+
         MapsTab.superclass.initComponent.apply(this, arguments);
     },
     loadMaps: function() {
@@ -28,8 +31,8 @@ Ext.define('MapsTab', {
         for(var i=0; i<n; i++) {
             tabs[i] = Ext.create('MapPanel',  {mapData: this.mapsData[i] } );
         }
-        this.items = tabs;
-        MapsTab.superclass.initComponent.apply(this, arguments);
+        this.items  = tabs;
+        this.superclass.initComponent.apply(this, arguments);
     }
 
 });

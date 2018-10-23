@@ -25,7 +25,8 @@ Ext.define('MapPanel', {
                 '<div class="tempIcon" id="ht1"></div>' +
                 '<div class="tempIcon" id="ht2"></div>' +
                 '<div class="tempIcon" id="ht3"></div>';
-        this.listeners = { scope: this,
+        this.listeners = {
+            scope: this,
             render: function() {
                 this.resizeImage();
             },

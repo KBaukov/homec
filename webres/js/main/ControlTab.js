@@ -5,7 +5,7 @@ Ext.define('ControlTab', {
     //layout: 'border',
     border: false, frame: false,
     initComponent: function() {
-      this.initPanel(); 
+      this.initPanel();
       this.items =  [ this.kotelTabPanel ];
       ControlTab.superclass.initComponent.apply(this, arguments);
     }, 

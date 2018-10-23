@@ -1,14 +1,14 @@
 Ext.define('KotelControlPanel', {
     extend: 'Ext.panel.Panel',
     initComponent: function() {
-        this.title = 'Управление';
+        //this.title = 'Управление';
         this.border = true;
         this.frame = true;
         this.region = 'center';
         //this.height = 100;
         this.margins = '2 2 2 2';
         this.id = 'kotelControlPanel';
-        this.collapsible = true;
+        //this.collapsible = true;
         this.maskOnDisable = true;
         this.collapsed = false;
         this.resizable = false;
@@ -45,17 +45,17 @@ Ext.define('KotelControlPanel', {
                 +'<div id="leftButt"></div><div id="rightButt"></div><div id="mokButt"></div>'
                 +'</div>';
        
-        this.tbar = [
-            Ext.create('Ext.Button', {text: 'Отменить', scope: this, disabled: false, id: 'execButt',
-                style: 'background-position: bottom center;', 
-                 handler: function() { this.command = ''; }
-            }),
-            '->', '-',
-            Ext.create('Ext.Button', {text: 'Применить', scope: this, disabled: false, id: 'execButt',
-                style: 'background-position: bottom center;', 
-                handler: function() { this.sendCommands(); }
-            })
-        ];
+        // this.tbar = [
+        //     Ext.create('Ext.Button', {text: 'Отменить', scope: this, disabled: false, id: 'execButt',
+        //         style: 'background-position: bottom center;',
+        //          handler: function() { this.command = ''; }
+        //     }),
+        //     '->', '-',
+        //     Ext.create('Ext.Button', {text: 'Применить', scope: this, disabled: false, id: 'execButt',
+        //         style: 'background-position: bottom center;',
+        //         handler: function() { this.sendCommands(); }
+        //     })
+        // ];
         
         this.listeners = { scope: this,
             afterrender: function(){ 

@@ -10,19 +10,25 @@ Ext.onReady(function(){
       ]
   };
   
-  var ControlTab  = Ext.create('ControlTab');
+  //var ControlTab  = Ext.create('ControlTab');
   var SettingsTab  = Ext.create('SettingsTab');
-  var MapPanel  = Ext.create('MapsTab');
+  var MapsTab  = Ext.create('MapsTab');
   
   var MainPanel  = Ext.create('Ext.tab.Panel',{
     region: 'center',
-    items: [ ControlTab, MapPanel, SettingsTab ]
+    items: [
+
+        //ControlTab,
+        SettingsTab,
+        MapsTab
+    ]
   });
   
   MainPanel.listeners = { scope: MainPanel,
-    afterrender: function(){ 
-       this.setActiveTab(1);
+    afterrender: function(){
        this.setActiveTab(0);
+       this.setActiveTab(1);
+       this.setActiveTab(2);
     }
   };
   
@@ -32,7 +38,7 @@ Ext.onReady(function(){
   Ext.create('Ext.container.Viewport', {
     layout: 'border', 
     items: [ MainToolBar, MainPanel ]
-  });//.render('vp');
+  });
  
 
   //ButtonPanel.updateSate();
