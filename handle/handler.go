@@ -28,10 +28,10 @@ func init() {
 	gob.Register(websocket.Conn{})
 
 	sessStore.Options = &sessions.Options{
-		Domain:   "localhost",
+		Domain:   "192.168.0.188",
 		Path:     "/",
 		MaxAge:   3600 * 8, // 8 hours
-		HttpOnly: true,
+		HttpOnly: false,
 	}
 }
 
@@ -82,7 +82,7 @@ func ServeLogin(db db.DbService) http.HandlerFunc {
 
 		if r.Method == "POST" {
 
-			login := r.PostFormValue("username")
+			login := strings.ToLower(r.PostFormValue("username"))
 			pass := r.PostFormValue("password")
 
 			pass, err := hashPass(pass)

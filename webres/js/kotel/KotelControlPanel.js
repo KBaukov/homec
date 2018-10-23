@@ -72,8 +72,13 @@ Ext.define('KotelControlPanel', {
 				this.bl.onclick = this.buttClick;
                 this.br.onclick = this.buttClick;
                 this.bo.onclick = this.buttClick;
+
+                this.bl.ontouch = this.buttClick;
+                this.br.ontouch = this.buttClick;
+                this.bo.ontouch = this.buttClick;
                 
                 this.dispCurrentView();
+                this.getValues();
             }
         };
     },
@@ -213,6 +218,33 @@ Ext.define('KotelControlPanel', {
 				cmp.setDisabled(false);
                 
               } else { error_mes('Ошибка', ansv.msg); cmp.setDisabled(false); }  
+            },
+            failure: function() { }
+        });
+    },
+    getValues: function() {
+        Ext.Ajax.request({
+            url: '/api/kotel/getvalues', scope: this, method: 'GET',
+            success: function(response, opts) {
+                var ansv = Ext.decode(response.responseText);
+                if(ansv.success) {
+                    this.tp = parseFloat(ansv.data.tp);
+                    this.to = parseFloat(ansv.data.to);
+                    this.destt = parseFloat(ansv.data.desttc);
+
+                    this.currVal[0]=parseInt(ansv.data.tp)+"";
+                    this.currVal[1]=parseInt(ansv.data.to)+"";
+                    this.currVal[2]=parseInt(ansv.data.kw)+"";
+                    if(!this.destInit) {
+                        this.destVal[0]=parseInt(ansv.data.desttp)+"";
+                        this.destVal[1]=parseInt(ansv.data.destto)+"";
+                        this.destVal[2]=parseInt(ansv.data.destkw)+"";
+                        this.destInit = true;
+                    }
+                    this.dispCurrentView();
+                    //this.resize();
+
+                } else error_mes('Ошибка', ansv.msg);
             },
             failure: function() { }
         });

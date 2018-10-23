@@ -8,9 +8,9 @@ Ext.define('MapsTab', {
         this.mapsData = [];
         this.loadMaps();
 
-        this.items = [];
+        this.items = [ Ext.create('Ext.panel.Panel', null) ];
 
-        MapsTab.superclass.initComponent.apply(this, arguments);
+        this.superclass.initComponent.apply(this, arguments);
     },
     loadMaps: function() {
         Ext.Ajax.request({

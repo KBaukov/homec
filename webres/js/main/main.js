@@ -17,7 +17,6 @@ Ext.onReady(function(){
   var MainPanel  = Ext.create('Ext.tab.Panel',{
     region: 'center',
     items: [
-
         //ControlTab,
         SettingsTab,
         MapsTab
@@ -26,9 +25,9 @@ Ext.onReady(function(){
   
   MainPanel.listeners = { scope: MainPanel,
     afterrender: function(){
-       this.setActiveTab(0);
-       this.setActiveTab(1);
-       this.setActiveTab(2);
+       //this.setActiveTab(2);
+       //this.setActiveTab(0);
+       //this.setActiveTab(2);
     }
   };
   
@@ -41,12 +40,10 @@ Ext.onReady(function(){
   });
  
 
-  //ButtonPanel.updateSate();
-//  
   Ext.getDom('boby').onmousemove = function(e) { 
       slCounter = false;
-      //console.log('--- ' + slCounter);
+      console.log('--- ' + slCounter);
   };
   slCounter = false;
-  screenLockT=setTimeout(screenLock, 3000000);
+  screenLockT=setTimeout(screenLock, 300000);
 });

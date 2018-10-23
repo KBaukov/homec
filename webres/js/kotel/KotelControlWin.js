@@ -13,7 +13,7 @@ Ext.define('KotelControlWin', {
 
         this.shadow='drop';
         this.shadowOffset=8;
-        this.buttons = [{ text: 'Закрыть', handler: this.CloseWin }];
+        this.buttons = [{ text: 'Закрыть', handler: this.closeWin, scope: this }];
 
         this.initForm();
         this.items=[this.kotelControlPanel];
@@ -25,7 +25,7 @@ Ext.define('KotelControlWin', {
         //this.kotelTabPanel   = Ext.create('KotelTabPanel',  {papa: this} );
         this.kotelControlPanel   = Ext.create('KotelControlPanel',  {papa: this} );
     },
-    closeWin: function() {
+    closeWin: function(ev) {
         this.close();
     }
 })

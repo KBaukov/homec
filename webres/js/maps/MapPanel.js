@@ -111,6 +111,7 @@ Ext.define('MapPanel', {
             if (ss[i].type == 'kotelIcon') {
                 el = Ext.getDom(this.mapData.id+'_sensor_'+ss[i].device_id);
                 el.ondblclick = this.kotelControl
+                el.ontouchend  = this.kotelControl
             }
         }
     },
