@@ -9,6 +9,7 @@ import (
 	"errors"
 	"homec/db"
 	"homec/ent"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -21,19 +22,25 @@ import (
 
 var (
 	sessStore = sessions.NewCookieStore([]byte("33446a9dcf9ea060a0a6532b166da32f304af0de"))
-
 )
+
 func init() {
 	gob.Register(ent.User{})
 	gob.Register(websocket.Conn{})
 
 	sessStore.Options = &sessions.Options{
-		Domain:   "192.168.0.188",
+		Domain:   "*",
 		Path:     "/",
 		MaxAge:   3600 * 8, // 8 hours
 		HttpOnly: false,
 	}
 }
+
+type errData struct {
+	Error_Code int
+	Error_Message string
+}
+
 
 func ServeHome(w http.ResponseWriter, r *http.Request) {
 
@@ -62,11 +69,18 @@ func ServeHome(w http.ResponseWriter, r *http.Request) {
 	} else {
 		session := getSession(w, r)
 		log.Println("Session: ", session)
-		if session.Values["user"] == nil {
+		u:=session.Values["user"]
+		if u == nil {
 			log.Println("Redirect: /login")
 			http.Redirect(w, r, "/login", 301)
 		} else {
-			http.ServeFile(w, r, "./webres/html/main.html")
+			user := u.(ent.User)
+			t, err := template.ParseFiles("./webres/html/main.html")
+			if err != nil {
+				log.Println("Temlate parse error: ", err)
+			}
+			t.Execute(w, user)
+
 		}
 	}
 
@@ -99,8 +113,12 @@ func ServeLogin(db db.DbService) http.HandlerFunc {
 			}
 
 			if len(users) != 1 {
-				w.Header().Add("X-Auth-Error", "В доступе отказано")
-				http.Redirect(w, r, "/login?auth=false", 301)
+				ed := errData{403, "Неправильные логин или пароль./nВ доступе отказано."}
+				t, err := template.ParseFiles("./webres/html/login.html")
+				if err != nil {
+					log.Println("Temlate parse error: ", err)
+				}
+				t.Execute(w, ed)
 				return
 			}
 
@@ -112,7 +130,13 @@ func ServeLogin(db db.DbService) http.HandlerFunc {
 
 		}
 		if r.Method == "GET" {
-			http.ServeFile(w, r, "./webres/html/login.html")
+			ed := errData{200, ""}
+			t, err := template.ParseFiles("./webres/html/login.html")
+			if err != nil {
+				log.Println("Temlate parse error: ", err)
+			}
+			t.Execute(w, ed)
+			//http.ServeFile(w, r, "./webres/html/login.html")
 		}
 
 	}
@@ -434,7 +458,7 @@ func hashPass(p string) (string, error) {
 
 func createSession(w http.ResponseWriter, r *http.Request, o interface{}, key string) {
 
-	session, err := sessStore.Get(r, "session-name")
+	session, err := sessStore.Get(r, "HomeControl")
 	if err != nil {
 		log.Printf("Error getting session: %v", err)
 	}
@@ -446,10 +470,10 @@ func createSession(w http.ResponseWriter, r *http.Request, o interface{}, key st
 }
 
 func getSession(w http.ResponseWriter, r *http.Request) *sessions.Session {
-	session, err := sessStore.Get(r, "session-name")
+	session, err := sessStore.Get(r, "HomeControl")
 	if err != nil {
 		log.Printf("Error getting session: %v", err)
-		session, err = sessStore.New(r, "session-name")
+		session, err = sessStore.New(r, "HomeControl")
 	}
 	return session
 }

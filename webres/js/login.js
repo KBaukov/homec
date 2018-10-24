@@ -52,8 +52,8 @@ Ext.onReady(function() {
             }]
     });
 	
-    //if (error != '') {		
-    if (document.URL.lastIndexOf('auth=false')>-1) {		
+    if (error != '') {
+    //if (document.URL.lastIndexOf('auth=false')>-1) {
         Ext.Msg.show({
             title:'Ошибка авторизации',
             msg: 'В доступе отказано',
