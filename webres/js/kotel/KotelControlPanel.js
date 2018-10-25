@@ -250,9 +250,10 @@ Ext.define('KotelControlPanel', {
         });
     },
     setDest: function() {
+        var suf = '.0';
         Ext.Ajax.request({
             url: '/api/kotel/setdest', scope: this, method: 'POST',
-            params: {desttp: this.destVal[0], destto: this.destVal[1], destkw: this.destVal[2]},
+            params: {desttp: this.destVal[0]+suf, destto: this.destVal[1]+suf, destkw: this.destVal[2]},
             success: function(response, opts) {
               var ansv = Ext.decode(response.responseText);
               if(ansv.success) {  
