@@ -86,7 +86,7 @@ func wsProcessor(c *websocket.Conn, db db.DbService) {
 			}
 		}
 
-		if strings.Contains(msg, "{\"action:\":\"datasend\"") {
+		if strings.Contains(msg, "\"action\":\"datasend\"") {
 
 			if strings.Contains(msg, "\"type\":\"koteldata\"") {
 				var data ent.KotelData

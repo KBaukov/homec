@@ -352,19 +352,35 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			apiDataResponse(w, data, err)
 		}
 		if r.URL.Path == "/api/kotel/setdest" {
+			var (
+				desttp float64
+				destto float64
+				desttc float64
+				destkw int
+				destpr float64
+			)
 
 			//			tp, err := strconv.ParseFloat(r.PostFormValue("tp"), 64)
 			//			to, err := strconv.ParseFloat(r.PostFormValue("to"), 64)
 			//			pr, err := strconv.ParseFloat(r.PostFormValue("pr"), 64)
 			//			kw, err := strconv.Atoi(r.PostFormValue("kw"))
-			desttp, err := strconv.ParseFloat(r.PostFormValue("desttp"), 64)
-			destto, err := strconv.ParseFloat(r.PostFormValue("destto"), 64)
-			destpr, err := strconv.ParseFloat(r.PostFormValue("destpr"), 64)
-			destkw, err := strconv.Atoi(r.PostFormValue("destkw"))
-			destc, err := strconv.ParseFloat(r.PostFormValue("desttc"), 64)
-			if err != nil {
-				log.Println("Ошибка валидации: ", err)
-			}
+
+			p1 := r.PostFormValue("desttp");
+			p2 := r.PostFormValue("destto");
+			p3 := r.PostFormValue("destkw");
+			p4 := r.PostFormValue("destpr");
+			p5 := r.PostFormValue("desttc");
+
+			log.Println("Values: ", p1, p2, p3, p4, p5)
+
+			if p1 != "" {desttp, _ = strconv.ParseFloat(p1, 64) }
+			if p2 != "" {destto, _ = strconv.ParseFloat(p2, 64) }
+			if p3 != "" {destpr, _ = strconv.ParseFloat(p3, 64) }
+			if p4 != "" {destkw, _ = strconv.Atoi(p4) }
+			if p5 != "" {desttc, _ = strconv.ParseFloat(p5, 64) }
+			//if err != nil {
+			//	log.Println("Ошибка валидации: ", err)
+			//}
 
 			kd, err := db.GetKotelData()
 
@@ -380,11 +396,11 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			if destpr == 0 {
 				destpr = kd.DESTPR
 			}
-			if destc == 0 {
-				destc = kd.DESTС
+			if desttc == 0 {
+				desttc = kd.DESTС
 			}
 
-			err = db.UpdKotelDestData(destto, desttp, destkw, destpr, destc)
+			err = db.UpdKotelDestData(destto, desttp, destkw, destpr, desttc)
 
 			apiDataResponse(w, []int{}, err)
 
