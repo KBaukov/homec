@@ -85,12 +85,12 @@ func wsProcessor(c *websocket.Conn, db db.DbService) {
 				break
 			}
 		}
-
+		log.Println("++++++++++++++++++++++++")
 		if strings.Contains(msg, "\"action\":\"datasend\"") {
-
+			log.Println("-----------------------------")
 			if strings.Contains(msg, "\"type\":\"koteldata\"") {
 				var data ent.KotelData
-
+				
 				wsData := ent.WsSendData{"", "", ""}
 
 				err = json.Unmarshal([]byte(msg), &wsData)
