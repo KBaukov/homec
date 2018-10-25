@@ -124,7 +124,10 @@ func ServeLogin(db db.DbService) http.HandlerFunc {
 
 			u := *users[0]
 			log.Println("Login user: ", u)
-			createSession(w, r, u, "user")
+			err = createSession(w, r, u, "user")
+			if err != nil {
+
+			}
 
 			http.Redirect(w, r, "/home", 301)
 
@@ -142,6 +145,7 @@ func ServeLogin(db db.DbService) http.HandlerFunc {
 	}
 
 }
+
 
 func ServeLogout(w http.ResponseWriter, r *http.Request) {
 	session := getSession(w, r)
@@ -456,17 +460,24 @@ func hashPass(p string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-func createSession(w http.ResponseWriter, r *http.Request, o interface{}, key string) {
+func createSession(w http.ResponseWriter, r *http.Request, o interface{}, key string) error {
 
 	session, err := sessStore.Get(r, "HomeControl")
 	if err != nil {
-		log.Printf("Error getting session: %v", err)
+		log.Printf("Error of session storage: %v", err)
+		return err
 	}
 
 	session.Values[key] = o //User{"Pogi", "Points", ""}
-	session.Save(r, w)
+	err = session.Save(r, w)
+	if err!= nil {
+		log.Printf("Error while create session: %v", err)
+		return err
+	}
 
-	log.Println("Session initiated")
+	log.Println("Session created: succes")
+
+	return err
 }
 
 func getSession(w http.ResponseWriter, r *http.Request) *sessions.Session {

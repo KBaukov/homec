@@ -46,6 +46,8 @@ func main() {
 		}
 	}
 
+	go http.ListenAndServe(":80", http.HandlerFunc(redirect))
+
 	http.HandleFunc("/logout", handle.ServeHome)
 	http.HandleFunc("/login", handle.ServeLogin(db))
 	http.HandleFunc("/home", handle.ServeHome)
@@ -67,4 +69,16 @@ func main() {
 		log.Printf("Ошибка веб-сервера: %v", err)
 	}
 
+}
+
+func redirect(w http.ResponseWriter, r *http.Request) {
+	log.Print("Host: ", r.Host)
+	listenString := "https://"+r.Host + ":" + cfg.Server.Port+"/home"
+	if len(r.URL.RawQuery) > 0 {
+		listenString += "?" + r.URL.RawQuery
+	}
+	log.Printf("redirect to: %s", listenString)
+	http.Redirect(w, r, listenString,
+		// see @andreiavrammsd comment: often 307 > 301
+		http.StatusTemporaryRedirect)
 }
