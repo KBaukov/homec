@@ -26,6 +26,34 @@ Ext.define('KotelControlWin', {
         this.kotelControlPanel   = Ext.create('KotelControlPanel',  {papa: this} );
     },
     closeWin: function(ev) {
-        this.close();
+        Ext.Ajax.request({
+            url: '/api/kotel/sessionStop', scope: this, method: 'POST',
+            //params: {user: user.login},
+            success: function(response, opts) {
+                var ansv = Ext.decode(response.responseText);
+
+                if(ansv.success) {
+                    this.close();
+
+                } else { error_mes('Ошибка', ansv.msg); }
+            },
+            failure: function() { }
+        });
+
+    },
+    openWin: function() {
+        Ext.Ajax.request({
+            url: '/api/kotel/sessionStart', scope: this, method: 'POST',
+            params: {user: user.login},
+            success: function(response, opts) {
+                var ansv = Ext.decode(response.responseText);
+
+                if(ansv.success) {
+                    this.show();
+
+                } else { error_mes('Ошибка', ansv.msg); }
+            },
+            failure: function() { }
+        });
     }
 })

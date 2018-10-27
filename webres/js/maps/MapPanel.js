@@ -118,6 +118,6 @@ Ext.define('MapPanel', {
     kotelControl: function(ev) {
         var cmp = Ext.getCmp('map'+ev.target.id.split('_')[0]);
         cmp.controllWin  = Ext.create('KotelControlWin');
-        cmp.controllWin.show();
+        cmp.controllWin.openWin();
     }
 });
