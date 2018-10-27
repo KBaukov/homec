@@ -466,7 +466,29 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			apiDataResponse(w, msg, err)
 		}
 		if r.URL.Path == "/api/kotel/sessionstop" {
+			var (
+				msg       string
+				err       error
+				kotelName string
+			)
+			_, kotelName, err = db.GetKotelID()
+			if err != nil || kotelName == "" {
+				err = errors.New("Котел не найден")
+			}
+			ws := WsConnections[kotelName]
+			if ws == nil {
+				err = errors.New("Сессия не активна")
+			} else {
+				msg = "{\"action\":\"sessionStop\"}"
+				log.Printf("Sending message to %s: %s", kotelName, msg)
+				err = ws.WriteMessage(1, []byte(msg))
+				if err != nil {
+					log.Println("Sending message error:", err)
+				}
+				IsControlSessionOpen = false;
+			}
 
+			apiDataResponse(w, msg, err)
 		}
 		return
 	}

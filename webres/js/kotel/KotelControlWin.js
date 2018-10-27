@@ -27,7 +27,7 @@ Ext.define('KotelControlWin', {
     },
     closeWin: function(ev) {
         Ext.Ajax.request({
-            url: '/api/kotel/sessionStop', scope: this, method: 'POST',
+            url: '/api/kotel/sessionstop', scope: this, method: 'POST',
             //params: {user: user.login},
             success: function(response, opts) {
                 var ansv = Ext.decode(response.responseText);
@@ -43,7 +43,7 @@ Ext.define('KotelControlWin', {
     },
     openWin: function() {
         Ext.Ajax.request({
-            url: '/api/kotel/sessionStart', scope: this, method: 'POST',
+            url: '/api/kotel/sessionstart', scope: this, method: 'POST',
             params: {user: user.login},
             success: function(response, opts) {
                 var ansv = Ext.decode(response.responseText);
