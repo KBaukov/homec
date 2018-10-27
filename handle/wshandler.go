@@ -30,6 +30,7 @@ var (
 	//configurationPath = flag.String("config", "config.json", "Путь к файлу конфигурации")
 	//cfg               = config.LoadConfig(*configurationPath)
 	WsAllowedOrigin   = "HomeControlApp" //homec.Cfg.WsAllowedOrigin
+	IsControlSessionOpen = false;
 )
 
 var upgrader = websocket.Upgrader{
@@ -123,12 +124,17 @@ func wsProcessor(c *websocket.Conn, db db.DbService) {
 
 			}
 		}
-
-		if strings.Contains(msg, "Important") {
-
-			if !sendMsg(c, "Ok. I'm...") {
-				break
+		if strings.Contains(msg, "\"action\":\"sessionStart\"") {
+			if strings.Contains(msg, "true") {
+				IsControlSessionOpen = true;
 			}
+
+		}
+		if strings.Contains(msg, "\"action\":\"sessionStop\"") {
+			if strings.Contains(msg, "true") {
+				IsControlSessionOpen = false;
+			}
+
 		}
 
 	}
