@@ -306,9 +306,11 @@ div.tempIcon {
 div.kotelIcon {
     height: 48px;
     width: 86px;
-    /*background-image: url("../img/kotel.png");
+    /*
+    background-image: url("../img/kotel.png");
     background-repeat: no-repeat;
-    background-position: left center;/*
+    background-position: left center;
+    */
     position: absolute;
     text-align: right;
     color: #ff6600;
