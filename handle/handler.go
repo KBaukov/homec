@@ -443,6 +443,8 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 				}
 			}
 
+			time.Sleep(1000 * time.Millisecond);
+
 			apiDataResponse(w, msg, err)
 		}
 		if r.URL.Path == "/api/kotel/sessionstart" {
