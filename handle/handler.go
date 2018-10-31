@@ -440,6 +440,13 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 				err = ws.WriteMessage(1, []byte(msg))
 				if err != nil {
 					log.Println("Sending message error:", err)
+				} else {
+					//for {
+					//	if !WsPresButtFlag {
+					//		time.Sleep(200 * time.Millisecond);
+					//		break;
+					//	}
+					//}
 				}
 			}
 

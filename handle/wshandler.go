@@ -31,6 +31,7 @@ var (
 	//cfg               = config.LoadConfig(*configurationPath)
 	WsAllowedOrigin   = "HomeControlApp" //homec.Cfg.WsAllowedOrigin
 	IsControlSessionOpen = false;
+	WsPresButtFlag = false;
 )
 
 var upgrader = websocket.Upgrader{
@@ -123,6 +124,12 @@ func wsProcessor(c *websocket.Conn, db db.DbService) {
 				}
 
 			}
+		}
+		if strings.Contains(msg, "\"action\":\"pessButton\"") {
+			if strings.Contains(msg, "true") {
+				WsPresButtFlag = false;
+			}
+
 		}
 		if strings.Contains(msg, "\"action\":\"sessionStart\"") {
 			if strings.Contains(msg, "true") {
