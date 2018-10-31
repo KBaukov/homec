@@ -373,14 +373,14 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			p5 := r.PostFormValue("desttc");
 
 			if p1 != "" {
-				if(p1=="mm") {
+				if(p1=="mm.0") {
 					desttp = 1.00;
 				} else {
 					desttp, _ = strconv.ParseFloat(p1, 64)
 				}
 			}
 			if p2 != "" {
-				if(p2=="mm") {
+				if(p2=="mm.0") {
 					destto = 1.00;
 				} else {
 					destto, _ = strconv.ParseFloat(p2, 64)
