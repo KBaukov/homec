@@ -380,7 +380,7 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 				}
 			}
 			if p2 != "" {
-				if(p1=="mm") {
+				if(p2=="mm") {
 					destto = 1.00;
 				} else {
 					destto, _ = strconv.ParseFloat(p2, 64)
