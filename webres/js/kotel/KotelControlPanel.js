@@ -239,6 +239,8 @@ Ext.define('KotelControlPanel', {
                         this.destVal[0]=parseInt(ansv.data.desttp)+"";
                         this.destVal[1]=parseInt(ansv.data.destto)+"";
                         this.destVal[2]=parseInt(ansv.data.destkw)+"";
+                        if(this.destVal[0]<25) this.destVal[0]="mm";
+                        if(this.destVal[1]<35) this.destVal[0]="mm";
                         this.destInit = true;
                     }
                     this.dispCurrentView();
