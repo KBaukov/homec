@@ -35,8 +35,14 @@ Ext.define('KotelControlPanel', {
         this.papa = this.initConfig().papa;
         
         this.task = { scope: this,
-            run: function() { this.blink() },
+            run: function() { this.blink(); },
             interval: 500
+        };
+
+        this.valuesTask = {
+            scope: this,
+            run: function() {  this.getValues(); },
+            interval: 2000
         };
         
         this.html = '<div id="cpBase">'
@@ -78,7 +84,8 @@ Ext.define('KotelControlPanel', {
                 this.bo.ontouch = this.buttClick;
                 
                 this.dispCurrentView();
-                this.getValues();
+                //this.getValues();
+                //Ext.TaskManager.start(this.valuesTask);
             }
         };
     },
@@ -295,9 +302,6 @@ Ext.define('KotelControlPanel', {
     setLedPosition: function(idx) {
         if(idx==5) idx=4;
         this.led1.style.left = (46+idx*70) + 'px';
-    },
-    setDestinationValuest: function(desttp, destto, destkw) {
-        //if()
     }
 
 });

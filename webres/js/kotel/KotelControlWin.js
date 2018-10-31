@@ -33,6 +33,9 @@ Ext.define('KotelControlWin', {
                 var ansv = Ext.decode(response.responseText);
 
                 if(ansv.success) {
+
+                    Ext.TaskManager.stop(this.kotelControlPanel.valuesTask);
+
                     this.close();
 
                 } else { error_mes('Ошибка', ansv.msg); }
@@ -49,6 +52,7 @@ Ext.define('KotelControlWin', {
                 var ansv = Ext.decode(response.responseText);
 
                 if(ansv.success) {
+                    Ext.TaskManager.start(this.kotelControlPanel.valuesTask);
                     this.show();
 
                 } else { error_mes('Ошибка', ansv.msg); }
