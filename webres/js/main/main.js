@@ -38,11 +38,20 @@ Ext.onReady(function(){
     layout: 'border', 
     items: [ MainToolBar, MainPanel ]
   });
- 
 
-  Ext.getDom('boby').onmousemove = function(e) { 
+  var body = Ext.getDom('boby');
+
+  body.onmousemove = function(e) {
       slCounter = false;
       console.log('--- ' + slCounter);
+  };
+  body.ontouch = function(e) {
+    slCounter = false;
+    console.log('--- ' + slCounter);
+  };
+  body.onclick = function(e) {
+        slCounter = false;
+        console.log('--- ' + slCounter);
   };
   slCounter = false;
   screenLockT=setTimeout(screenLock, 300000);
