@@ -206,10 +206,12 @@ Ext.define('KotelControlPanel', {
 		var butt = id.substring(0,1).toUpperCase();
 		var cmp =Ext.getCmp('kotelControlPanel');
 		cmp.setDisabled(true);
+
+		var stage = cmp.mode+'_'+cmp.curSatgeInx;
 		
         Ext.Ajax.request({
             url: '/api/kotel/pressbutt', scope: this, method: 'POST',
-            params: {button: butt},
+            params: {button: butt, stage: satge},
             success: function(response, opts) {
               var ansv = Ext.decode(response.responseText);
 			  
@@ -250,6 +252,9 @@ Ext.define('KotelControlPanel', {
                         if(this.destVal[1]<35) this.destVal[1]="mm";
                         this.destInit = true;
                     }
+                    var st = ansv.data.stage.split('_');
+                    this.mode = st[0];
+                    this.curSatgeInx = st[1];
                     this.dispCurrentView();
                     //this.resize();
 

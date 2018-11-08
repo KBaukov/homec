@@ -24,9 +24,9 @@ const (
 	delDeviceQuery  = `DELETE FROM hc.devices WHERE id=?`
 
 	kotelDevIdQuery       = `SELECT id, name FROM hc.devices WHERE type="KotelController"`
-	getKotelDataQuery     = "SELECT DEVICE_ID ,`TO`, TP, KW, PR, DEST_TO, DEST_TP, DEST_KW, DEST_PR, DEST_TC FROM hc.kotel"
+	getKotelDataQuery     = "SELECT DEVICE_ID ,`TO`, TP, KW, PR, DEST_TO, DEST_TP, DEST_KW, DEST_PR, DEST_TC, STAGE FROM hc.kotel"
 	updKotelDevIdQuery    = `UPDATE hc.kotel SET device_id = ? WHERE 1`
-	updKotelDestDataQuery = "UPDATE hc.kotel SET dest_to= ?, dest_tp= ?, dest_kw= ?, dest_pr= ?, dest_tc= ? WHERE 1"
+	updKotelDestDataQuery = "UPDATE hc.kotel SET dest_to=?, dest_tp=?, dest_kw=?, dest_pr=?, dest_tc=?, stage=? WHERE 1"
 	updKotelMeshDataQuery = "UPDATE hc.kotel SET `to`= ?, tp= ?, kw= ?, pr= ? WHERE 1"
 
 	getMapsQuery = `SELECT * FROM hc.maps ORDER BY id`
@@ -331,10 +331,7 @@ func (db Database) GetKotelID() (int, string, error) {
 func (db Database) GetKotelData() (ent.KotelData, error) {
 	var (
 		kData ent.KotelData
-		//kId   int
 	)
-
-	//kId, _, err = db.getKotelID()
 
 	stmt, err := db.Conn.Prepare(getKotelDataQuery)
 	if err != nil {
@@ -359,13 +356,14 @@ func (db Database) GetKotelData() (ent.KotelData, error) {
 			destkw   int
 			destpr   float64
 			desttc   float64
+			stage    string
 		)
-		err = rows.Scan(&deviceId, &to, &tp, &kw, &pr, &destto, &desttp, &destkw, &destpr, &desttc)
+		err = rows.Scan(&deviceId, &to, &tp, &kw, &pr, &destto, &desttp, &destkw, &destpr, &desttc, &stage)
 		if err != nil {
 			return kData, err
 		}
 
-		kData = ent.KotelData{deviceId, to, tp, kw, pr, destto, desttp, destkw, destpr, desttc}
+		kData = ent.KotelData{deviceId, to, tp, kw, pr, destto, desttp, destkw, destpr, desttc, stage}
 	}
 
 	return kData, err
