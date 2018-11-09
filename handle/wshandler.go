@@ -143,7 +143,12 @@ func wsProcessor(c *websocket.Conn, db db.DbService) {
 			}
 
 		}
+		if strings.Contains(msg, "\"action\":\"setStage\"") {
+			if strings.Contains(msg, "true") {
+				//IsControlSessionOpen = false;
+			}
 
+		}
 	}
 
 }

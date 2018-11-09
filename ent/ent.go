@@ -64,7 +64,7 @@ type KotelData struct {
 	DESTKW    int     `json:"destkw"`
 	DESTPR    float64 `json:"destpr"`
 	DESTС     float64 `json:"desttc"`
-	STAGE	  string  `json:"satge"`
+	STAGE	  string  `json:"stage"`
 }
 
 type SensorsData struct {

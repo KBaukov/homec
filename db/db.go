@@ -64,7 +64,7 @@ type DbService interface {
 	GetKotelID() (int, string, error)
 	GetKotelData() (ent.KotelData, error)
 	UpdKotelMeshData(to float64, tp float64, kw int, pr float64) error
-	UpdKotelDestData(destto float64, desttp float64, destkw int, destpr float64, destc float64) error
+	UpdKotelDestData(destto float64, desttp float64, destkw int, destpr float64, destc float64, stage string) error
 
 	GetMaps() ([]ent.Map, error)
 	UpdMap(id int, title string, pict string, w int, h int, descr string) (bool, error)
@@ -369,7 +369,7 @@ func (db Database) GetKotelData() (ent.KotelData, error) {
 	return kData, err
 }
 
-func (db Database) UpdKotelDestData(destto float64, desttp float64, destkw int, destpr float64, destc float64) error {
+func (db Database) UpdKotelDestData(destto float64, desttp float64, destkw int, destpr float64, destc float64, stage string) error {
 
 	stmt, err := db.Conn.Prepare(updKotelDestDataQuery)
 	if err != nil {
@@ -377,7 +377,7 @@ func (db Database) UpdKotelDestData(destto float64, desttp float64, destkw int, 
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(destto, desttp, destkw, destpr, destc)
+	_, err = stmt.Exec(destto, desttp, destkw, destpr, destc, stage)
 	if err != nil {
 		return err
 	}

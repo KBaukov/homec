@@ -357,7 +357,10 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 				desttc float64 = 0.0;
 				destkw int = 0;
 				destpr float64 = 0.0;
+				stage string = ""
 				err error
+				msg       string
+				kotelName string
 			)
 
 			p1 := r.PostFormValue("desttp");
@@ -365,6 +368,7 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			p3 := r.PostFormValue("destkw");
 			p4 := r.PostFormValue("destpr");
 			p5 := r.PostFormValue("desttc");
+			p6 := r.PostFormValue("stage");
 
 			if p1 != "" {
 				if(p1=="mm.0") {
@@ -384,6 +388,7 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			if p3 != "" {destpr, _ = strconv.ParseFloat(p3, 64) }
 			if p4 != "" {destkw, _ = strconv.Atoi(p4) }
 			if p5 != "" {desttc, _ = strconv.ParseFloat(p5, 64) }
+			if p6 != "" {stage = p6; }
 
 
 			kd, err := db.GetKotelData()
@@ -403,13 +408,43 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			if desttc == 0.0 {
 				desttc = kd.DESTС
 			}
+			if stage == "" {
+				stage = kd.STAGE
+			}
 
-			log.Println("Values: ", destto, desttp, destkw, destpr, desttc)
+			log.Println("Values: ", destto, desttp, destkw, destpr, desttc, stage)
 
-			err = db.UpdKotelDestData(destto, desttp, destkw, destpr, desttc)
+			_, kotelName, err = db.GetKotelID()
+			if err != nil || kotelName == "" {
+				err = errors.New("Котел не найден")
+			}
+			ws := WsConnections[kotelName]
+			if ws == nil {
+				err = errors.New("Сессия не активна")
+			} else {
+				msg = "{\"action\":\"setDestValues\", \"destTo\":\"" + strings.Replace(p2, "mm", "0", 1) + "\",  \"destTp\":\"" + strings.Replace(p1, "mm", "0", 1) + "\",  \"destTc\":\"" + p5 + "\",  \"destPr\":\"" + p3 + "\",  \"destKw\":\"" + p4 + "\",  \"stage\":\"" + stage + "\", }"
+				log.Printf("Sending message to %s: %s", kotelName, msg)
+				err = ws.WriteMessage(1, []byte(msg))
+				if err != nil {
+					log.Println("Sending message error:", err)
+				}
+			}
+
+			err = db.UpdKotelDestData(destto, desttp, destkw, destpr, desttc, stage)
 
 			apiDataResponse(w, []int{}, err)
 
+		}
+		if r.URL.Path == "/api/kotel/getstage" {
+			data, err := db.GetKotelData()
+			apiDataResponse(w, data.STAGE, err)
+		}
+		if r.URL.Path == "/api/kotel/setstage" {
+			stage := r.PostFormValue("stage");
+			data, err := db.GetKotelData()
+			data.STAGE = stage;
+
+			apiDataResponse(w, data, err)
 		}
 		if r.URL.Path == "/api/kotel/pressbutt" {
 			var (
@@ -424,13 +459,13 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			}
 
 			butt := r.PostFormValue("button")
-			stage := r.PostFormValue("stage")
+			//stage := r.PostFormValue("stage")
 
 			ws := WsConnections[kotelName]
 			if ws == nil {
 				err = errors.New("Сессия не активна")
 			} else {
-				msg = "{\"action\":\"pessButton\", \"butt\":\"" + butt + "\", \"satge\": \""+stage+"\"}"
+				msg = "{\"action\":\"pessButton\", \"butt\":\"" + butt +"\"}"; //"\", \"satge\": \""+stage+"\"}"
 				log.Printf("Sending message to %s: %s", kotelName, msg)
 				err = ws.WriteMessage(1, []byte(msg))
 				if err != nil {
