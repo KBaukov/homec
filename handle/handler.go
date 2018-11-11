@@ -481,7 +481,7 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 				}
 			}
 
-			time.Sleep(1000 * time.Millisecond);
+			time.Sleep(300 * time.Millisecond);
 
 			apiDataResponse(w, "", err)
 		}
