@@ -289,7 +289,7 @@ Ext.define('KotelControlPanel', {
         var currStage = this.mode+'_'+this.curSatgeInx;
         Ext.Ajax.request({
             url: '/api/kotel/setdest', scope: this, method: 'POST',
-            params: {desttp: this.destVal[0]+suf, destto: this.destVal[1]+suf, destTc: 25.0, destkw: this.destVal[2], stage: currStage},
+            params: {desttp: this.destVal[0]+suf, destto: this.destVal[1]+suf, desttc: '25.0', destkw: this.destVal[2], destpr: this.destVal[3], stage: currStage},
             success: function(response, opts) {
               var ansv = Ext.decode(response.responseText);
               if(ansv.success) {  

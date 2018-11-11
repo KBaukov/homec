@@ -27,13 +27,13 @@ extern "C" {
 OneWire  ds1(D4);  // on pin D4 (a 4.7K resistor is necessary)
 OneWire  ds2(D3);  // on pin D3 (a 4.7K resistor is necessary)
 
-//const char* wlan_ssid             = "WF";
-//const char* wlan_password         = "k0k0JambA";
-const char* wlan_ssid             = "Home";
-const char* wlan_password         = "q1w2e3r4";
+const char* wlan_ssid             = "WF";
+const char* wlan_password         = "k0k0JambA";
+//const char* wlan_ssid             = "Home";
+//const char* wlan_password         = "q1w2e3r4";
 
-const char* ws_host               = "192.168.43.175";
-const int   ws_port               = 8085;
+const char* ws_host               = "192.168.0.111";
+const int   ws_port               = 443;
 //const char* ws_host               = "alabino.ddns.net";
 //const int   ws_port               = 8083;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
