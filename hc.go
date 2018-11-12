@@ -39,10 +39,12 @@ func main() {
 	db, err := db.NewDB(cfg.DbConnectionString)
 	if err != nil {
 		log.Printf("Не удалось подключиться к базе данных: %v", err)
+		return;
 	} else {
 		_, err = db.Conn.Exec("SET AUTOCOMMIT=1;")
 		if err != nil {
 			log.Printf("Не удалось установить настройки базы данных: %v", err)
+			return;
 		}
 	}
 

@@ -169,6 +169,15 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 
 		log.Printf("incoming request in: %v", r.URL.Path)
 
+		session := getSession(w, r)
+		u:=session.Values["user"]
+		if u == nil {
+			log.Println("Session die !!!")
+			//apiDataResponse(w, []int{}, new error("hjhg"))
+			http.Error(w, "Session die!!!", http.StatusUnauthorized);
+			return;
+		}
+
 		//##############
 		if r.URL.Path == "/api/devices" {
 			devices, err := db.GetDevices()
