@@ -110,7 +110,7 @@ func wsProcessor(c *websocket.Conn, db db.DbService) {
 					log.Println("Error data unmarshaling: ", err)
 				}
 
-				log.Println("get kotel data:", data)
+				log.Println("get room data:", data)
 
 				if !sendMsg(c, "{action:datasend,success:true}") {
 					log.Println("Send to " + devId + ": failed")
@@ -119,6 +119,43 @@ func wsProcessor(c *websocket.Conn, db db.DbService) {
 					log.Println("Send to " + devId + ": success")
 					err = db.UpdKotelMeshData(data.TO, data.TP, data.KW, data.PR)
 					if err != nil {
+						log.Println("Error data writing in db: ", err)
+					}
+				}
+
+			}
+
+			if strings.Contains(msg, "\"type\":\"roomdata\"") {
+				var data ent.SensorsData
+
+				wsData := ent.WsSendData{"", "", ""}
+
+				err = json.Unmarshal([]byte(msg), &wsData)
+				if err != nil {
+					log.Println("Error data unmarshaling: ", err)
+				}
+
+				dd, err := json.Marshal(wsData.DATA)
+				if err != nil {
+					log.Println("Error data marshaling: ", err)
+				}
+
+				err = json.Unmarshal(dd, &data)
+				if err != nil {
+					log.Println("Error data unmarshaling: ", err)
+				}
+
+				data.DATE = time.Now();
+
+				log.Println("get room data:", data)
+
+				if !sendMsg(c, "{action:datasend,success:true}") {
+					log.Println("Send to " + devId + ": failed")
+					break
+				} else {
+					log.Println("Send to " + devId + ": success")
+					success, err := db.AddRoomData(data)
+					if err != nil || !success {
 						log.Println("Error data writing in db: ", err)
 					}
 				}

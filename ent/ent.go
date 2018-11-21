@@ -68,7 +68,7 @@ type KotelData struct {
 }
 
 type SensorsData struct {
-	DEVICE_ID   int       `json:"device_id"`
+	DEVICE_ID   string    `json:"device_id"`
 	SENSOR_TYPE string    `json:"sensor_type"`
 	T           float64   `json:"t"`
 	H           float64   `json:"h"`

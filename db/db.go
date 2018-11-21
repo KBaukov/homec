@@ -40,6 +40,8 @@ const (
 	updMapSensorQuery  = `UPDATE hc.map_sensors SET map_id=?, device_id=?, type=?, xk=?, yk=?, pict=?, description=? WHERE id=?`
 	delMapSensorQuery  = `DELETE FROM hc.map_sensors WHERE id=?`
 	//lastMapSensorIdQuery = `SELECT max(id) as id FROM hc.map_sensors`
+
+	addRoomDataQuery = `INSERT INTO hc.room_data (device_id, sensor_type, t, h, p, date) VALUES (?,?,?,?,?,?)`
 )
 
 // database структура подключения к базе данных
@@ -73,6 +75,8 @@ type DbService interface {
 	GetMapSensors(mapId int) ([]ent.MapSensor, error)
 	UpdMapSensor(id int, mapId int, devId int, sensorType string, xk float64, yk float64, pict string, descr string) (bool, error)
 	DelMapSensor(id int) (bool, error)
+
+	AddRoomData(data ent.SensorsData) (bool, error)
 }
 
 // newDB открывает соединение с базой данных
@@ -548,6 +552,23 @@ func (db Database) DelMapSensor(id int) (bool, error) {
 	defer stmt.Close()
 
 	_, err = stmt.Exec(id)
+	if err != nil {
+		return false, err
+	}
+
+	return true, err
+}
+
+// ########################### ROOM DATA ######################################
+
+func (db Database) AddRoomData(data ent.SensorsData) (bool, error) {
+	stmt, err := db.Conn.Prepare(addRoomDataQuery)
+	if err != nil {
+		return false, err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(data.DEVICE_ID, data.SENSOR_TYPE, data.T, data.H, data.P, data.DATE)
 	if err != nil {
 		return false, err
 	}
