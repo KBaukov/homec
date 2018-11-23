@@ -353,6 +353,16 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			sens, err := db.GetLastId("map_sensors")
 			apiDataResponse(w, sens, err)
 		}
+		if r.URL.Path == "/api/sensors/data" {
+			devId := r.PostFormValue("device_id")
+			data, err := db.GetRoomData(devId)
+			apiDataResponse(w, data, err)
+		}
+		if r.URL.Path == "/api/sensors/stat" {
+			devId := r.PostFormValue("device_id")
+			data, err := db.GetRoomDataStat(devId)
+			apiDataResponse(w, data, err)
+		}
 
 		//##############################################
 		if r.URL.Path == "/api/kotel/getvalues" {

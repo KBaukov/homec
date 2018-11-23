@@ -29,7 +29,7 @@ Ext.define('MapPanel', {
         this.listeners = { scope: this,
             render: function() {
                 this.getSensorsData();
-                //Ext.TaskManager.start(this.task);
+                Ext.TaskManager.start(this.task);
 
             },
             resize: function() {
@@ -87,17 +87,18 @@ Ext.define('MapPanel', {
     getValues: function() {
         var n = this.data.sensors.length;
         for(var i=0; i<n; i++) {
-            var devId = this.data.sensors[i].device_id;
+            var devId =  this.data.sensors[i].device_id;
+            var devName =  devices.getName( devId );
             Ext.Ajax.request({
-                url: '/api/rooms/getvalues', scope: this, method: 'POST',
-                params: { device_id: devId },
+                url: '/api/sensors/data', scope: this, method: 'POST',
+                params: { device_id: devName },
                 success: function(response, opts) {
                   var ansv = Ext.decode(response.responseText);
                   if(ansv.success) {    
-                    var sens = Ext.getDom(this.mapData.id+'_sensor_'+ansv.device_id);
-                        sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
-                        sens.innerHTML = parseFloat(ansv.t) +'°C</br></br>'
-                        +( (ansv.h!='0.00') ? parseFloat(ansv.h)+'%' : '');
+                    var sens = Ext.getDom(this.mapData.id+'_sensor_'+devId);
+                        //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
+                        sens.innerHTML = parseFloat(ansv.data.t) +'°C</br></br>'
+                        +( (ansv.h!='0.00') ? parseFloat(ansv.data.h)+'%' : '');
                     
                   } else error_mes('Ошибка', ansv.msg);  
                 },
@@ -108,10 +109,14 @@ Ext.define('MapPanel', {
     setListeners: function() {
         var ss = this.data.sensors;
         for(var i=0; i<ss.length; i++) {
+            el = Ext.getDom(this.mapData.id+'_sensor_'+ss[i].device_id);
             if (ss[i].type == 'kotelIcon') {
-                el = Ext.getDom(this.mapData.id+'_sensor_'+ss[i].device_id);
                 el.ondblclick = this.kotelControl
                 el.ontouchend  = this.kotelControl
+            }
+            if(ss[i].type == 'tempIcon') {
+                el.ondblclick = this.chartData
+                el.ontouchend  = this.chartData
             }
         }
     },
@@ -119,5 +124,11 @@ Ext.define('MapPanel', {
         var cmp = Ext.getCmp('map'+ev.target.id.split('_')[0]);
         cmp.controllWin  = Ext.create('KotelControlWin');
         cmp.controllWin.openWin();
+    },
+    chartData: function(ev) {
+        var dd = ev.target.id.split('_')
+        var cmp = Ext.getCmp('map'+dd[0]);
+        cmp.chartWin  = Ext.create('RoomDataChartWin', {devId: dd[2]});
+        cmp.chartWin.openWin();
     }
 });

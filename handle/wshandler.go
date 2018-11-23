@@ -110,7 +110,7 @@ func wsProcessor(c *websocket.Conn, db db.DbService) {
 					log.Println("Error data unmarshaling: ", err)
 				}
 
-				log.Println("get room data:", data)
+				log.Println("incoming kotel data:", data)
 
 				if !sendMsg(c, "{action:datasend,success:true}") {
 					log.Println("Send to " + devId + ": failed")
@@ -147,7 +147,7 @@ func wsProcessor(c *websocket.Conn, db db.DbService) {
 
 				data.DATE = time.Now();
 
-				log.Println("get room data:", data)
+				log.Println("incoming room data:", data)
 
 				if !sendMsg(c, "{action:datasend,success:true}") {
 					log.Println("Send to " + devId + ": failed")

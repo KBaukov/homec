@@ -2,13 +2,17 @@ package db
 
 import (
 	"errors"
+	"homec/ent"
 	"log"
 	"time"
-	"homec/ent"
 
 	"github.com/jmoiron/sqlx"
 )
 
+
+var (
+	RoomData     = make(map[string]ent.SensorsData)
+)
 const (
 	authQuery = `SELECT * FROM hc.users WHERE users.login = ? AND users.pass = ?`
 
@@ -42,6 +46,8 @@ const (
 	//lastMapSensorIdQuery = `SELECT max(id) as id FROM hc.map_sensors`
 
 	addRoomDataQuery = `INSERT INTO hc.room_data (device_id, sensor_type, t, h, p, date) VALUES (?,?,?,?,?,?)`
+	getRoomDataQuery = `SELECT * FROM hc.room_data WHERE device_id= ? ORDER BY date DESC LIMIT 1`
+	getRoomDataStat  = `SELECT * FROM hc.room_data WHERE device_id= ? AND year(date) = year(now()) AND week(date, 1) = week(now(), 1) limit 50`
 )
 
 // database структура подключения к базе данных
@@ -77,6 +83,8 @@ type DbService interface {
 	DelMapSensor(id int) (bool, error)
 
 	AddRoomData(data ent.SensorsData) (bool, error)
+	GetRoomData(devId string) (ent.SensorsData, error)
+	GetRoomDataStat(devId string) ([]ent.SensorsData, error)
 }
 
 // newDB открывает соединение с базой данных
@@ -573,6 +581,49 @@ func (db Database) AddRoomData(data ent.SensorsData) (bool, error) {
 		return false, err
 	}
 
+	RoomData[data.DEVICE_ID] = data
+
 	return true, err
+}
+
+func (db Database) GetRoomData(devId string) (ent.SensorsData, error) {
+	var err error
+	data, ok := RoomData[devId]
+	if !ok  {
+		err = errors.New("нет данных")
+	}
+	return data, err
+}
+
+func (db Database) GetRoomDataStat(devId string) ([]ent.SensorsData, error) {
+	var data = make([]ent.SensorsData, 0)
+
+	stmt, err := db.Conn.Prepare(getRoomDataStat)
+	if err != nil {
+		return data, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(devId)
+
+	for rows.Next() {
+		var (
+			dId    string
+			sType string
+			t       float64
+			h       float64
+			p       float64
+			d 		time.Time
+		)
+
+		err = rows.Scan(&dId, &sType, &t, &h, &p, &d)
+		if err != nil {
+			return data, err
+		}
+		sData := ent.SensorsData{dId, sType, t, h, p, d}
+		data = append(data, sData)
+	}
+
+	return data, err
 }
 
