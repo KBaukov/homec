@@ -89,21 +89,41 @@ Ext.define('MapPanel', {
         for(var i=0; i<n; i++) {
             var devId =  this.data.sensors[i].device_id;
             var devName =  devices.getName( devId );
-            Ext.Ajax.request({
-                url: '/api/sensors/data', scope: this, method: 'POST',
-                params: { device_id: devName },
-                success: function(response, opts) {
-                  var ansv = Ext.decode(response.responseText);
-                  if(ansv.success) {    
-                    var sens = Ext.getDom(this.mapData.id+'_sensor_'+devId);
-                        //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
-                        sens.innerHTML = parseFloat(ansv.data.t) +'°C</br></br>'
-                        +( (ansv.h!='0.00') ? parseFloat(ansv.data.h)+'%' : '');
-                    
-                  } else error_mes('Ошибка', ansv.msg);  
-                },
-                failure: function() { this.unmask(); }
-            });
+            var type = this.data.sensors[i].type;
+            if(type=='kotelIcon') {
+                Ext.Ajax.request({
+                    url: '/api/kotel/getvalues', scope: this, method: 'POST',
+                    params: { device_id: devName },
+                    success: function(response, opts) {
+                        var ansv = Ext.decode(response.responseText);
+                        if(ansv.success) {
+                            var sens = Ext.getDom(this.mapData.id+'_sensor_'+devId);
+                            //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
+                            sens.innerHTML = parseFloat(ansv.data.to) +'°C</br></br>'
+                                + parseFloat(ansv.data.tp)+'°C';
+
+                        } else error_mes('Ошибка', ansv.msg);
+                    },
+                    failure: function() { this.unmask(); }
+                });
+            } else {
+                Ext.Ajax.request({
+                    url: '/api/sensors/data', scope: this, method: 'POST',
+                    params: { device_id: devName },
+                    success: function(response, opts) {
+                        var ansv = Ext.decode(response.responseText);
+                        if(ansv.success) {
+                            var sens = Ext.getDom(this.mapData.id+'_sensor_'+devId);
+                            //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
+                            sens.innerHTML = parseFloat(ansv.data.t) +'°C</br></br>'
+                                +( (ansv.h!='0.00') ? parseFloat(ansv.data.h)+'%' : '');
+
+                        } else error_mes('Ошибка', ansv.msg);
+                    },
+                    failure: function() { this.unmask(); }
+                });
+            }
+
         }
     },
     setListeners: function() {
