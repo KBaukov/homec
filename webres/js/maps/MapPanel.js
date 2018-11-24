@@ -99,8 +99,10 @@ Ext.define('MapPanel', {
                         if(ansv.success) {
                             var sens = Ext.getDom(this.mapData.id+'_sensor_'+devId);
                             //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
-                            sens.innerHTML = parseFloat(ansv.data.to) +'°C</br></br>'
-                                + parseFloat(ansv.data.tp)+'°C';
+                            sens.innerHTML = parseFloat(ansv.data.tp) +'°C</br></br>'
+                                + parseFloat(ansv.data.to)+'°C</br></br>'
+                                //+ parseFloat(ansv.data.kw)+'kw'
+                            ;
 
                         } else error_mes('Ошибка', ansv.msg);
                     },
