@@ -360,7 +360,8 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 		}
 		if r.URL.Path == "/api/sensors/stat" {
 			devId := r.PostFormValue("device_id")
-			data, err := db.GetRoomDataStat(devId)
+			count, _ := strconv.Atoi( r.PostFormValue("count") )
+			data, err := db.GetRoomDataStat(devId, count)
 			apiDataResponse(w, data, err)
 		}
 
@@ -404,9 +405,8 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 				}
 			}
 
-			if p3 != "" {destpr, _ = strconv.ParseFloat(p3, 64) }
-			if p4 != "" {destkw, _ = strconv.Atoi(p4) }
-			//else {  p4 =   }
+			if p3 != "" {destkw, _ = strconv.Atoi(p3) }
+			if p4 != "" {destpr, _ = strconv.ParseFloat(p4, 64) }
 			if p5 != "" {desttc, _ = strconv.ParseFloat(p5, 64) }
 			if p6 != "" {stage = p6; }
 

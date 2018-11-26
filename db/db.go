@@ -2,11 +2,10 @@ package db
 
 import (
 	"errors"
+	"github.com/jmoiron/sqlx"
 	"homec/ent"
 	"log"
 	"time"
-
-	"github.com/jmoiron/sqlx"
 )
 
 
@@ -47,7 +46,7 @@ const (
 
 	addRoomDataQuery = `INSERT INTO hc.room_data (device_id, sensor_type, t, h, p, date) VALUES (?,?,?,?,?,?)`
 	getRoomDataQuery = `SELECT * FROM hc.room_data WHERE device_id= ? ORDER BY date DESC LIMIT 1`
-	getRoomDataStat  = `SELECT * FROM hc.room_data WHERE device_id= ? AND year(date) = year(now()) AND week(date, 1) = week(now(), 1) limit 50`
+	getRoomDataStat  = `SELECT * FROM hc.room_data WHERE device_id= ? AND year(date) = year(now()) AND week(date, 1) = week(now(), 1) ORDER BY date desc limit ?`
 )
 
 // database структура подключения к базе данных
@@ -84,7 +83,7 @@ type DbService interface {
 
 	AddRoomData(data ent.SensorsData) (bool, error)
 	GetRoomData(devId string) (ent.SensorsData, error)
-	GetRoomDataStat(devId string) ([]ent.SensorsData, error)
+	GetRoomDataStat(devId string, count int) ([]ent.SensorsData, error)
 }
 
 // newDB открывает соединение с базой данных
@@ -595,7 +594,7 @@ func (db Database) GetRoomData(devId string) (ent.SensorsData, error) {
 	return data, err
 }
 
-func (db Database) GetRoomDataStat(devId string) ([]ent.SensorsData, error) {
+func (db Database) GetRoomDataStat(devId string, count int) ([]ent.SensorsData, error) {
 	var data = make([]ent.SensorsData, 0)
 
 	stmt, err := db.Conn.Prepare(getRoomDataStat)
@@ -604,7 +603,7 @@ func (db Database) GetRoomDataStat(devId string) ([]ent.SensorsData, error) {
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(devId)
+	rows, err := stmt.Query(devId, count)
 
 	for rows.Next() {
 		var (
@@ -621,6 +620,13 @@ func (db Database) GetRoomDataStat(devId string) ([]ent.SensorsData, error) {
 			return data, err
 		}
 		sData := ent.SensorsData{dId, sType, t, h, p, d}
+
+		//hh := rand.Float64() * 100;
+		//tt := rand.Float64() * 100;
+		//
+		//sData.H = hh;
+		//sData.T = tt;
+
 		data = append(data, sData)
 	}
 

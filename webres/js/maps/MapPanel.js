@@ -96,15 +96,19 @@ Ext.define('MapPanel', {
                     params: { device_id: devName },
                     success: function(response, opts) {
                         var ansv = Ext.decode(response.responseText);
+                        var sens = Ext.getDom(this.mapData.id+'_sensor_'+devId);
                         if(ansv.success) {
-                            var sens = Ext.getDom(this.mapData.id+'_sensor_'+devId);
+                            sens.style.opacity = 1;
                             //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
                             sens.innerHTML = parseFloat(ansv.data.tp) +'°C</br></br>'
                                 + parseFloat(ansv.data.to)+'°C</br></br>'
                                 //+ parseFloat(ansv.data.kw)+'kw'
                             ;
-
-                        } else error_mes('Ошибка', ansv.msg);
+                        } else {
+                            if(ansv.msg=='нет данных') {
+                                sens.style.opacity = 0.2;
+                            } else error_mes('Ошибка', ansv.msg);
+                        }
                     },
                     failure: function() { this.unmask(); }
                 });
@@ -114,13 +118,18 @@ Ext.define('MapPanel', {
                     params: { device_id: devName },
                     success: function(response, opts) {
                         var ansv = Ext.decode(response.responseText);
+                        var sens = Ext.getDom(this.mapData.id+'_sensor_'+devId);
                         if(ansv.success) {
-                            var sens = Ext.getDom(this.mapData.id+'_sensor_'+devId);
+                            sens.style.opacity = 1;
                             //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
                             sens.innerHTML = parseFloat(ansv.data.t) +'°C</br></br>'
                                 +( (ansv.h!='0.00') ? parseFloat(ansv.data.h)+'%' : '');
 
-                        } else error_mes('Ошибка', ansv.msg);
+                        }  else {
+                            if(ansv.msg=='нет данных') {
+                                sens.style.opacity = 0.2;
+                            } else error_mes('Ошибка', ansv.msg);
+                        }
                     },
                     failure: function() { this.unmask(); }
                 });
@@ -150,7 +159,7 @@ Ext.define('MapPanel', {
     chartData: function(ev) {
         var dd = ev.target.id.split('_')
         var cmp = Ext.getCmp('map'+dd[0]);
-        cmp.chartWin  = Ext.create('RoomDataChartWin', {devId: dd[2]});
+        cmp.chartWin  = Ext.create('RoomDataChartWin', {devId: dd[2], sensName: devices.getName(dd[2])});
         cmp.chartWin.openWin();
     }
 });
