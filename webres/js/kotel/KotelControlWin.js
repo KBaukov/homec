@@ -16,8 +16,7 @@ Ext.define('KotelControlWin', {
         this.buttons = [{ text: 'Закрыть', handler: this.closeWin, scope: this }];
 
         this.initForm();
-        this.items=[this.kotelControlPanel];
-        //this.html = "rtrgrtrt";
+        this.items=[ this.kotelControlPanel ];
 
         KotelControlWin.superclass.initComponent.apply(this, arguments);
     },

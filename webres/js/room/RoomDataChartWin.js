@@ -4,8 +4,8 @@ Ext.define('RoomDataChartWin', {
 
         this.resizable=false;
         this.closable=true;
-        this.width=900;
-        this.height=600;
+        this.width=1000;
+        this.height=700;
         this.plain=true;
         this.modal= true;
         this.headerPosition='top';
@@ -17,7 +17,7 @@ Ext.define('RoomDataChartWin', {
         this.tbar = [
             {xtype: 'label', text: '', width: 20},
             {xtype: 'label', text: 'показаны последние '},
-            {xtype: 'field', value: 50, id: 'limitData', width: 30 }, '->', '-',
+            {xtype: 'field', value: 15, id: 'limitData', width: 30 }, '->', '-',
             { text: 'Обновить', handler: this.reloadData, scope: this }
         ];
 
@@ -69,9 +69,9 @@ Ext.define('RoomDataChartWin', {
                 position: 'bottom',
                 fields: 'date',
                 title: 'Время',
-                dateFormat: 'H:i:s',
+                dateFormat: 'i:s',
                 groupBy: 'year,month,day',
-                aggregateOp: 'sum',
+                //aggregateOp: 'sum',
                 constrain: true
             }],
             series: [{
@@ -79,30 +79,32 @@ Ext.define('RoomDataChartWin', {
                 axis: ['left', 'bottom'],
                 xField: 'date',
                 yField: 't',
+                highlight: true,
+                //showInLegend: true,
                 label: {
-                    //display: 'none',
+                    display: 'over',
                     field: 't',
-                    renderer: function(v) { return v >> 0; },
+                    renderer: function(v) { return v + '°C'; },
                     'text-anchor': 'middle'
                 },
                 markerConfig: {
-                    radius: 2,
-                    size: 2
+                    type: 'circle', radius: 2, size: 2
                 }
             },{
                 type: 'line',
                 axis: ['left', 'bottom'],
                 xField: 'date',
                 yField: 'h',
+                highlight: true,
+                //showInLegend: true,
                 label: {
-                    display: 'none',
+                    display: 'over',
                     field: 'h',
-                    renderer: function(v) { return v >> 0; },
+                    renderer: function(v) { return v  + '%'; },
                     'text-anchor': 'middle'
                 },
                 markerConfig: {
-                    radius: 2,
-                    size: 2
+                    type: 'circle', radius: 2, size: 2
                 }
             }]
         });
@@ -113,7 +115,7 @@ Ext.define('RoomDataChartWin', {
     openWin: function() {
         Ext.Ajax.request({
             url: '/api/sensors/stat', scope: this, method: 'POST',
-            params: {device_id: this.devId, count: 50},
+            params: {device_id: this.devId, count: 15},
             success: function(response, opts) {
                 var ansv = Ext.decode(response.responseText);
                 if(ansv.success) {
@@ -141,13 +143,13 @@ Ext.define('RoomDataChartWin', {
             if(i==n-1) rangeFrom = date;
             chData.push({date: date, t: t, h: h});
         }
-        this.Chart.axes.get(1).fromDate = rangeFrom;
+        this.Chart.axes.get(1).fromDate = rangeFrom -1;
         this.Chart.axes.get(1).toDate = rangeTo;
         this.Chart.markerIndex = 1;
         this.store.loadData(chData);
     },
     reloadData: function() {
-        var c = Ext.getCmp('limitData').value;
+        var c = Ext.getCmp('limitData').value || 15;
         Ext.Ajax.request({
             url: '/api/sensors/stat', scope: this, method: 'POST',
             params: {device_id: this.devId, count: c},
