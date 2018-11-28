@@ -360,8 +360,10 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 		}
 		if r.URL.Path == "/api/sensors/stat" {
 			devId := r.PostFormValue("device_id")
+			from := r.PostFormValue("from")
+			to := r.PostFormValue("to")
 			count, _ := strconv.Atoi( r.PostFormValue("count") )
-			data, err := db.GetRoomDataStat(devId, count)
+			data, err := db.GetRoomDataStat(devId, from, to, count)
 			apiDataResponse(w, data, err)
 		}
 

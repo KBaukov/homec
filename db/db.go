@@ -44,9 +44,9 @@ const (
 	delMapSensorQuery  = `DELETE FROM hc.map_sensors WHERE id=?`
 	//lastMapSensorIdQuery = `SELECT max(id) as id FROM hc.map_sensors`
 
-	addRoomDataQuery = `INSERT INTO hc.room_data (device_id, sensor_type, t, h, p, date) VALUES (?,?,?,?,?,?)`
+	addRoomDataQuery = `INSERT INTO hc.room_data (device_id, sensor_type, t, h, p, date) VALUES (?,?,?,?,?,now())`
 	getRoomDataQuery = `SELECT * FROM hc.room_data WHERE device_id= ? ORDER BY date DESC LIMIT 1`
-	getRoomDataStat  = `SELECT * FROM hc.room_data WHERE device_id= ? AND year(date) = year(now()) AND week(date, 1) = week(now(), 1) ORDER BY date desc limit ?`
+	getRoomDataStat  = `SELECT * FROM hc.room_data WHERE device_id = ? AND date BETWEEN STR_TO_DATE(?, '%Y-%m-%d %H:%i:%s') AND STR_TO_DATE(?, '%Y-%m-%d %H:%i:%s') ORDER BY date desc limit ?`
 )
 
 // database структура подключения к базе данных
@@ -83,7 +83,7 @@ type DbService interface {
 
 	AddRoomData(data ent.SensorsData) (bool, error)
 	GetRoomData(devId string) (ent.SensorsData, error)
-	GetRoomDataStat(devId string, count int) ([]ent.SensorsData, error)
+	GetRoomDataStat(devId string, from string, to string,  count int) ([]ent.SensorsData, error)
 }
 
 // newDB открывает соединение с базой данных
@@ -575,7 +575,7 @@ func (db Database) AddRoomData(data ent.SensorsData) (bool, error) {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(data.DEVICE_ID, data.SENSOR_TYPE, data.T, data.H, data.P, data.DATE)
+	_, err = stmt.Exec(data.DEVICE_ID, data.SENSOR_TYPE, data.T, data.H, data.P)
 	if err != nil {
 		return false, err
 	}
@@ -594,7 +594,7 @@ func (db Database) GetRoomData(devId string) (ent.SensorsData, error) {
 	return data, err
 }
 
-func (db Database) GetRoomDataStat(devId string, count int) ([]ent.SensorsData, error) {
+func (db Database) GetRoomDataStat(devId string, from string, to string, count int) ([]ent.SensorsData, error) {
 	var data = make([]ent.SensorsData, 0)
 
 	stmt, err := db.Conn.Prepare(getRoomDataStat)
@@ -603,7 +603,7 @@ func (db Database) GetRoomDataStat(devId string, count int) ([]ent.SensorsData, 
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(devId, count)
+	rows, err := stmt.Query(devId, from, to, count)
 
 	for rows.Next() {
 		var (
