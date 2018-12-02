@@ -93,10 +93,10 @@ Ext.define('MapPanel', {
             if(type=='kotelIcon') {
                 Ext.Ajax.request({
                     url: '/api/kotel/getvalues', scope: this, method: 'POST',
-                    params: { device_id: devName },
+                    params: { device_id: devName, id: devId },
                     success: function(response, opts) {
                         var ansv = Ext.decode(response.responseText);
-                        var sens = Ext.getDom(this.mapData.id+'_sensor_'+devId);
+                        var sens = Ext.getDom(this.mapData.id+'_sensor_'+opts.params.id);
                         if(ansv.success) {
                             sens.style.opacity = 1;
                             //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
@@ -115,10 +115,10 @@ Ext.define('MapPanel', {
             } else {
                 Ext.Ajax.request({
                     url: '/api/sensors/data', scope: this, method: 'POST',
-                    params: { device_id: devName },
+                    params: { device_id: devName, id: devId },
                     success: function(response, opts) {
                         var ansv = Ext.decode(response.responseText);
-                        var sens = Ext.getDom(this.mapData.id+'_sensor_'+devId);
+                        var sens = Ext.getDom(this.mapData.id+'_sensor_'+opts.params.id);
                         if(ansv.success) {
                             sens.style.opacity = 1;
                             //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
