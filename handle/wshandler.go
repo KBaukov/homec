@@ -39,7 +39,7 @@ var upgrader = websocket.Upgrader{
 		deviceOrigin := r.Header.Get("Origin")
 		if WsAllowedOrigin != deviceOrigin {
 			log.Println("Origin not allowed:", deviceOrigin)
-			log.Println("Origin want:", WsAllowedOrigin)
+			//log.Println("Origin want:", WsAllowedOrigin)
 			return false
 		}
 		return true
@@ -53,18 +53,18 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 		var err error
 		deviceId := r.Header.Get("DeviceId")
 
-		log.Println("incoming request from: ", deviceId)
+		log.Println("incoming WS request from: ", deviceId)
 
 		ws, err = upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Println("upgrade:", err)
+			log.Println("Upgrade error:", err)
 			return
 		}
 		//defer ws.Close() !!!! Important
 
 		WsConnections[deviceId] = ws
 
-		log.Println("Ws Connection: ", ws)
+		log.Println("Create new Ws Connection: succes, device: ", deviceId)
 		go wsProcessor(ws, db)
 
 	}
