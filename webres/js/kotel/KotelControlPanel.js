@@ -1,10 +1,10 @@
 Ext.define('KotelControlPanel', {
     extend: 'Ext.panel.Panel',
     initComponent: function() {
-        //this.title = 'Управление';
+        this.title = 'Управление';
         this.border = true;
         this.frame = true;
-        this.region = 'center';
+        //this.region = 'center';
         //this.height = 100;
         this.margins = '2 2 2 2';
         this.id = 'kotelControlPanel';
