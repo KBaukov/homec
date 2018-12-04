@@ -31,6 +31,9 @@ const (
 	updKotelDevIdQuery    = `UPDATE hc.kotel SET device_id = ? WHERE 1`
 	updKotelDestDataQuery = "UPDATE hc.kotel SET dest_to=?, dest_tp=?, dest_kw=?, dest_pr=?, dest_tc=?, stage=? WHERE 1"
 	updKotelMeshDataQuery = "UPDATE hc.kotel SET `to`= ?, tp= ?, kw= ?, pr= ? WHERE 1"
+	addKotelStatDataQuery = "INSERT INTO hc.kotel_data (`to`, tp, kw, pr, date) VALUES (?,?,?,?,now())"
+	//getKotelDataQuery = `SELECT * FROM hc.kotel_data WHERE 1 ORDER BY date DESC LIMIT 1`
+	getKotelDataStat  = `SELECT * FROM hc.kotel_data WHERE date BETWEEN STR_TO_DATE(?, '%Y-%m-%d %H:%i:%s') AND STR_TO_DATE(?, '%Y-%m-%d %H:%i:%s') ORDER BY date desc limit ?`
 
 	getMapsQuery = `SELECT * FROM hc.maps ORDER BY id`
 	addMapQuery  = `INSERT INTO hc.maps (title, pict, w, h, description, id) VALUES (?,?,?,?,?,?)`
@@ -47,6 +50,8 @@ const (
 	addRoomDataQuery = `INSERT INTO hc.room_data (device_id, sensor_type, t, h, p, date) VALUES (?,?,?,?,?,now())`
 	getRoomDataQuery = `SELECT * FROM hc.room_data WHERE device_id= ? ORDER BY date DESC LIMIT 1`
 	getRoomDataStat  = `SELECT * FROM hc.room_data WHERE device_id = ? AND date BETWEEN STR_TO_DATE(?, '%Y-%m-%d %H:%i:%s') AND STR_TO_DATE(?, '%Y-%m-%d %H:%i:%s') ORDER BY date desc limit ?`
+
+
 )
 
 // database структура подключения к базе данных
@@ -72,6 +77,8 @@ type DbService interface {
 	GetKotelData() (ent.KotelData, error)
 	UpdKotelMeshData(to float64, tp float64, kw int, pr float64) error
 	UpdKotelDestData(destto float64, desttp float64, destkw int, destpr float64, destc float64, stage string) error
+	AddKotelStatData(to float64, tp float64, kw int, pr float64) (bool, error)
+	GetKotelDataStat(from string, to string, count int) ([]ent.KotelStatData, error)
 
 	GetMaps() ([]ent.Map, error)
 	UpdMap(id int, title string, pict string, w int, h int, descr string) (bool, error)
@@ -84,6 +91,7 @@ type DbService interface {
 	AddRoomData(data ent.SensorsData) (bool, error)
 	GetRoomData(devId string) (ent.SensorsData, error)
 	GetRoomDataStat(devId string, from string, to string,  count int) ([]ent.SensorsData, error)
+
 }
 
 // newDB открывает соединение с базой данных
@@ -410,6 +418,59 @@ func (db Database) UpdKotelMeshData(to float64, tp float64, kw int, pr float64) 
 	}
 
 	return err
+}
+
+func (db Database) AddKotelStatData(to float64, tp float64, kw int, pr float64) (bool, error) {
+	stmt, err := db.Conn.Prepare(addKotelStatDataQuery)
+	if err != nil {
+		return false, err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(to, tp, kw, pr)
+	if err != nil {
+		return false, err
+	}
+
+	return true, err
+}
+
+func (db Database) GetKotelDataStat(from string, to string, count int) ([]ent.KotelStatData, error) {
+	var data = make([]ent.KotelStatData, 0)
+
+	stmt, err := db.Conn.Prepare(getKotelDataStat)
+	if err != nil {
+		return data, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(from, to, count)
+
+	for rows.Next() {
+		var (
+			to       float64
+			tp       float64
+			kw       int
+			pr       float64
+			d 		time.Time
+		)
+
+		err = rows.Scan(&to, &tp, &kw, &pr, &d)
+		if err != nil {
+			return data, err
+		}
+		sData := ent.KotelStatData{to, tp, kw, pr, d}
+
+		//hh := rand.Float64() * 100;
+		//tt := rand.Float64() * 100;
+		//
+		//sData.H = hh;
+		//sData.T = tt;
+
+		data = append(data, sData)
+	}
+
+	return data, err
 }
 
 //################## Maps #########################

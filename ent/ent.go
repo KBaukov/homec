@@ -67,6 +67,14 @@ type KotelData struct {
 	STAGE	  string  `json:"stage"`
 }
 
+type KotelStatData struct {
+	TO        float64 `json:"to"`
+	TP        float64 `json:"tp"`
+	KW        int     `json:"kw"`
+	PR        float64 `json:"pr"`
+	DATE	  time.Time `json:"date"`
+}
+
 type SensorsData struct {
 	DEVICE_ID   string    `json:"device_id"`
 	SENSOR_TYPE string    `json:"sensor_type"`

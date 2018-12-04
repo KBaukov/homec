@@ -563,6 +563,16 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 
 			apiDataResponse(w, msg, err)
 		}
+		if r.URL.Path == "/api/kotel/stat" {
+			//devId := r.PostFormValue("device_id")
+			from := r.PostFormValue("from")
+			to := r.PostFormValue("to")
+			count, _ := strconv.Atoi( r.PostFormValue("count") )
+			data, err := db.GetKotelDataStat(from, to, count)
+			apiDataResponse(w, data, err)
+		}
+
+
 		return
 	}
 }

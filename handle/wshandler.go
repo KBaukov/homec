@@ -121,6 +121,11 @@ func wsProcessor(c *websocket.Conn, db db.DbService) {
 					if err != nil {
 						log.Println("Error data writing in db: ", err)
 					}
+					_, err = db.AddKotelStatData(data.TO, data.TP, data.KW, data.PR)
+					if err != nil {
+						log.Println("Error data writing in db: ", err)
+					}
+
 				}
 
 			}
