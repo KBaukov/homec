@@ -42,6 +42,14 @@
   version = "v1.4.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:73f8f3d39f0f3100420067b1ea4d98533ac96526faef38e3646ebf43aa4ff246"
+  name = "github.com/jasonlvhit/gocron"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "54194c9749d48b073c9aeb2c787b6882e95dd0cd"
+
+[[projects]]
   digest = "1:6c41d4f998a03b6604227ccad36edaed6126c397e5d78709ef4814a1145a6757"
   name = "github.com/jmoiron/sqlx"
   packages = [
@@ -59,6 +67,7 @@
     "github.com/go-sql-driver/mysql",
     "github.com/gorilla/sessions",
     "github.com/gorilla/websocket",
+    "github.com/jasonlvhit/gocron",
     "github.com/jmoiron/sqlx",
   ]
   solver-name = "gps-cdcl"
