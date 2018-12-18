@@ -22,9 +22,7 @@ Ext.define('KotelControlWin', {
     },
     initForm: function() {
         this.kotelControlPanel   = Ext.create('KotelControlPanel',  {papa: this} );
-        this.ketelChartPanel = Ext.create('Ext.panel.Panel',  {
-            title: 'Статистика', disabled: true
-        });
+        this.ketelChartPanel = Ext.create('KotelDataChartPanel',  {papa: this} );
         this.tabPanel = Ext.create('Ext.tab.Panel',{
             region: 'center',
             items: [
@@ -57,6 +55,7 @@ Ext.define('KotelControlWin', {
 
     },
     openWin: function() {
+        this.ketelChartPanel.loadData();
         Ext.Ajax.request({
             url: '/api/kotel/sessionstart', scope: this, method: 'POST',
             params: {user: user.login},
