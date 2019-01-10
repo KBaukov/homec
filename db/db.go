@@ -363,7 +363,7 @@ func (db Database) GetKotelData() (ent.KotelData, error) {
 		return kData, err
 	}
 
-	for rows.Next() {
+	if rows.Next() {
 		var (
 			deviceId string
 			to       float64

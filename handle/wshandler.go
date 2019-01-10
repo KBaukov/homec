@@ -212,9 +212,21 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 			}
 
 		}
-		if strings.Contains(msg, "\"action\":\"setStage\"") {
-			if strings.Contains(msg, "true") {
-				//IsControlSessionOpen = false;
+		if strings.Contains(msg, "\"action\":\"getStage\"") {
+			if strings.Contains(msg, "\"type\":\"koteldata\"") {
+				kd, err := db.GetKotelData()
+				if err != nil {
+					log.Println("Error while read data from data base: ", err)
+				}
+
+				kData, err := json.Marshal(kd)
+				if err != nil {
+					log.Println("Error data marshaling: ", err)
+				}
+
+				if !sendMsg(c, "{\"action\":\"getStage\", \"success\":true, \"data\": { "+string(kData)+" } }") {
+					break
+				}
 			}
 
 		}
