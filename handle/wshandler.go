@@ -261,14 +261,20 @@ func pingActiveDevices() {
 	for devId, c := range WsConnections {
 		if c != nil {
 			if !sendMsg(c, "ping") {
-				log.Println("Send ping to " + devId + ": failed")
-				WsConnections[devId] = nil
+				log.Println("Send ping to " + devId + ": failed.")
+				deleteWsConn(devId)
 			} else {
-				log.Println("Send ping to " + devId )
+				log.Println("Send ping to " + devId + " success." )
 			}
 		} else {
-			log.Println("Device " + devId + "is die" )
+			log.Println("Device " + devId + " is die." )
+			deleteWsConn(devId)
 		}
 
 	}
+}
+
+func deleteWsConn(dId string) {
+	WsConnections[dId] = nil
+	delete(WsConnections, dId)
 }
