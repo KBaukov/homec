@@ -212,7 +212,7 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 			}
 
 		}
-		if strings.Contains(msg, "\"action\":\"getStage\"") {
+		if strings.Contains(msg, "\"action\":\"getDestValues\"") {
 			if strings.Contains(msg, "\"type\":\"koteldata\"") {
 				kd, err := db.GetKotelData()
 				if err != nil {
@@ -224,7 +224,12 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 					log.Println("Error data marshaling: ", err)
 				}
 
-				if !sendMsg(c, "{\"action\":\"getStage\", \"success\":true, \"data\": { "+string(kData)+" } }") {
+				sData := string(kData)
+				sData = strings.Replace(sData, "{", "", 1)
+				sData = strings.Replace(sData, "}", "", 1)
+
+				msg := "{\"action\":\"setDestValues\"" + sData + " }";
+				if !sendMsg(c, msg) {
 					break
 				}
 			}
