@@ -225,10 +225,7 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 				}
 
 				sData := string(kData)
-				sData = strings.Replace(sData, "{", "", 1)
-				sData = strings.Replace(sData, "}", "", 1)
-
-				msg := "{\"action\":\"setDestValues\"" + sData + " }";
+				msg := strings.Replace(sData, "{", "{\"action\":\"setDestValues\", ", 1)
 				if !sendMsg(c, msg) {
 					break
 				}
