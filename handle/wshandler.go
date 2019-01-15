@@ -255,22 +255,22 @@ func getDevIdByConn(c *websocket.Conn) string {
 
 
 func pingActiveDevices() {
-	log.Println("### Ping Devices ###")
+	log.Println("########## Ping Devices ############")
 	for devId, c := range WsConnections {
 		if c != nil {
 			if !sendMsg(c, "ping") {
-				log.Println("Send ping to " + devId + ": failed.")
+				log.Println("# Send ping to " + devId + " failed.  #")
 				deleteWsConn(devId)
 			} else {
 				log.Println("Send ping to " + devId + " success." )
 			}
 		} else {
-			log.Println("Device " + devId + " is die." )
+			log.Println("# Device " + devId + " is die.        #" )
 			deleteWsConn(devId)
 		}
 
 	}
-	log.Println("################")
+	log.Println("####################################")
 }
 
 func deleteWsConn(dId string) {
