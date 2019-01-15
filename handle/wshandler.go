@@ -72,14 +72,12 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 
 		WsConnections[deviceId] = ws
 		if(ws != nil) {
-			//ws.SetPingHandler(func(string) error { ws.SetReadDeadline(time.Now().Add(pingWait)); return nil })
-			//ws.SetPongHandler(func(string) error { ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 			ws.SetPingHandler(ping)
 			ws.SetPongHandler(pong)
 			log.Println("Create new Ws Connection: succes, device: ", deviceId)
 			go wsProcessor(ws, db, deviceId)
 		} else {
-			log.Println("Ws Connection lost for device: ", deviceId)
+			log.Println("Ws Connectionfor device: ", deviceId, " not created.")
 		}
 
 
@@ -272,6 +270,7 @@ func pingActiveDevices() {
 		}
 
 	}
+	log.Println("################")
 }
 
 func deleteWsConn(dId string) {
