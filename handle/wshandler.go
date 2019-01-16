@@ -72,8 +72,8 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 
 		WsConnections[deviceId] = ws
 		if(ws != nil) {
-			ws.SetPingHandler(ping)
-			ws.SetPongHandler(pong)
+			//ws.SetPingHandler(ping)
+			//ws.SetPongHandler(pong)
 			log.Println("Create new Ws Connection: succes, device: ", deviceId)
 			go wsProcessor(ws, db, deviceId)
 		} else {
@@ -213,6 +213,7 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 		if strings.Contains(msg, "\"action\":\"getDestValues\"") {
 			if strings.Contains(msg, "\"type\":\"koteldata\"") {
 				kd, err := db.GetKotelData()
+				log.Println("Get dest data from db: ", kd)
 				if err != nil {
 					log.Println("Error while read data from data base: ", err)
 				}
@@ -223,7 +224,10 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 				}
 
 				sData := string(kData)
-				msg := strings.Replace(sData, "{", "{\"action\":\"setDestValues\", ", 1)
+				msg := "{\"action\":\"setDestValues\"," + sData[66:len(sData)]
+				//msg := strings.Replace(sData, "{", "{\"action\":\"setDestValues\", ", 1)
+				//msg := "{\"action\":\"setDestValues\",\"device_id\":\"ESP_6822FC\",\"to\":65.35,\"tp\":50.34,\"kw\":11,\"pr\":2.43,\"destTo\":36.0,\"destTp\":29.0,\"destKw\":2,\"destPr\":1.8,\"destTc\":25.0,\"stage\":\"0_1\"}"
+				log.Println("Dest Data is: ", msg)
 				if !sendMsg(c, msg) {
 					break
 				}

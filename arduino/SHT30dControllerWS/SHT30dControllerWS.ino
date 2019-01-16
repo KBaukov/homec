@@ -25,8 +25,8 @@ extern "C" {
 
 Adafruit_SHT31 sht30 = Adafruit_SHT31();
 
-const char* wlan_ssid             = "Home";
-const char* wlan_password         = "4r3e2w1q";
+const char* wlan_ssid             = "WF";
+const char* wlan_password         = "k0k0JambA";
 
 const char* ws_host               = "alabino.ddns.net";
 const int   ws_port               = 443;
@@ -277,4 +277,3 @@ float ttRead(OneWire ds) {
   return temperature;
 }
 */
-

@@ -59,11 +59,11 @@ type KotelData struct {
 	TP        float64 `json:"tp"`
 	KW        int     `json:"kw"`
 	PR        float64 `json:"pr"`
-	DESTTO    float64 `json:"destto"`
-	DESTTP    float64 `json:"desttp"`
-	DESTKW    int     `json:"destkw"`
-	DESTPR    float64 `json:"destpr"`
-	DESTС     float64 `json:"desttc"`
+	DESTTO    float64 `json:"destTo"`
+	DESTTP    float64 `json:"destTp"`
+	DESTKW    int     `json:"destKw"`
+	DESTPR    float64 `json:"destPr"`
+	DESTС     float64 `json:"destTc"`
 	STAGE	  string  `json:"stage"`
 }
 

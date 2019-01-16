@@ -4,7 +4,7 @@
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 #include <OneWire.h>
-#include <SD.h>
+//#include <SD.h>
 
 #define POWER_MODE  0
 #define LEFT_BUTT  D5
@@ -22,7 +22,7 @@ extern "C" {
 // SETTINGS
 OneWire  ds1(D4);  // on pin D4 (a 4.7K resistor is necessary)
 OneWire  ds2(D3);  // on pin D3 (a 4.7K resistor is necessary)
-File hcFile;
+//File hcFile;
 WebSocketsClient webSocket;
 
 // Const
@@ -30,10 +30,10 @@ const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 //const char* wlan_ssid           = "Home";
 //const char* wlan_password       = "q1w2e3r4";
-const char* ws_host               = "192.168.43.175";
-const int   ws_port               = 8085;
-//const char* ws_host             = "alabino.ddns.net";
-//const int   ws_port             = 443;
+//const char* ws_host               = "192.168.43.175";
+//const int   ws_port               = 8085;
+const char* ws_host             = "alabino.ddns.net";
+const int   ws_port             = 443;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
 const char* host = "KotelController";
 
@@ -73,14 +73,14 @@ void setup() {
   Serial.begin(115200);
   Serial.println();//Serial.println();Serial.println();
 
-  if (!SD.begin(4)) {
+  /*if (!SD.begin(4)) {
     Serial.println("initialization failed!");
     return;
   } else {
     parseDestData(
       readKotelData()
     );
-  }
+  }*/
 
   pinMode(LEFT_BUTT, OUTPUT);
   pinMode(RIGT_BUTT, OUTPUT);
@@ -113,6 +113,8 @@ void setup() {
   webSocket.setExtraHeaders(headers);
   webSocket.onEvent(webSocketEvent);
 
+  delay(2000);
+  Serial.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   delay(1000);
 }
 
@@ -140,7 +142,8 @@ void loop() {
                  + "\"to\":" + to + ", "
                  + "\"tp\":" + tp + ", "
                  + "\"kw\":" + kw + ", "
-                 + "\"pr\":" + pr
+                 + "\"pr\":" + pr + ", "
+                 + "\"stage\": \"" + currentStage + "\""
                  + " } }";
 
     sendMessage(msg);
@@ -152,15 +155,15 @@ void loop() {
 
 
 
-  if (tp < destTc) {
+  /*if (tp < destTc) {
     digitalWrite(EXTC_BUTT, LOW);
     //Serial.println("Relay is on");
   } else {
     digitalWrite(EXTC_BUTT, HIGH);
     //Serial.println("Relay is off");
-  }
+  }*/
 
-  //delay(10);
+  delay(100);
 }
 
 void sendMessage(String & msg) {
@@ -236,7 +239,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 
 
 
-String readKotelData() {
+/*String readKotelData() {
   String content = ""; int i = 0;
   hcFile = SD.open("kotel.dat");
   int sz = hcFile.size();
@@ -255,7 +258,7 @@ String readKotelData() {
   Serial.println(i);
   Serial.println("Content: " + content);
   return content;
-}
+}*/
 
 void parseData(String json) {
   StaticJsonBuffer<100> jsonBuffer;
@@ -272,7 +275,7 @@ void parseData(String json) {
 
 void parseDestData(String json) {
 
-  StaticJsonBuffer<500> jsonBuffer;
+  StaticJsonBuffer<400> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
   if (!root.success()) {
     Serial.println("parseObject() failed");
@@ -281,16 +284,14 @@ void parseDestData(String json) {
   }
 
   Serial.println("====== Dest Values incoming ========");
-  //{"action":"setDestValues", "destTo":"0.0",  "destTp":"0.0",  "destTc":"25.0",  "destPr":"1.8",  "destKw":"2",  "stage":"0_0", }
-  //{"action":"setDestValues", "destTo":"0.0",  "destTp":"0.0",  "destTc":"25.0",  "destPr":"1.8",  "destKw":"2",  "stage":"0_0", }
-  String dTp = root["destTp"]; destTp = atof(root["destTp"]);
-  String dTo = root["destTo"]; destTo = atof(root["destTo"]);
-  String dTc = root["destTc"]; destTc = atof(root["destTc"]);
-  String dPr = root["destPr"]; destPr = atof(root["destPr"]);
-  String dKw = root["destKw"]; destKw = atoi(root["destKw"]);
+  destTp = atof(root["destTp"]);
+  destTo = atof(root["destTo"]); 
+  destTc = atof(root["destTc"]); 
+  destPr = atof(root["destPr"]);
+  destKw = atoi(root["destKw"]);
   String stage = root["stage"]; currentStage = stage;
 
-  if (SD.exists("kotel.dat")) {
+  /*if (SD.exists("kotel.dat")) {
     //Serial.println("kotel.dat exists.");
     SD.remove("kotel.dat");
     hcFile = SD.open("kotel.dat", FILE_WRITE);
@@ -307,7 +308,7 @@ void parseDestData(String json) {
     }
   } else {
     Serial.println("kotel.dat doesn't exist.");
-  }
+  }*/
 
 
 

@@ -62,6 +62,8 @@ func main() {
 	listenString := cfg.Server.Address + ":" + cfg.Server.Port
 	log.Print("Сервер запущен: ", listenString)
 
+
+
 	if cfg.Server.TLS {
 		err = http.ListenAndServeTLS(listenString, cfg.Server.CertificatePath, cfg.Server.KeyPath, nil)
 	} else {
