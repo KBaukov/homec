@@ -1,10 +1,7 @@
-#include <Arduino.h>
-#include <Hash.h>
-#include <ESP8266WiFi.h>
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 #include <OneWire.h>
-//#include <SD.h>
+
 
 #define POWER_MODE  0
 #define LEFT_BUTT  D5
@@ -30,16 +27,18 @@ const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 //const char* wlan_ssid           = "Home";
 //const char* wlan_password       = "q1w2e3r4";
-//const char* ws_host               = "192.168.43.175";
-//const int   ws_port               = 8085;
-const char* ws_host             = "alabino.ddns.net";
-const int   ws_port             = 443;
+const char* ws_host               = "192.168.43.175";
+const int   ws_port               = 8085;
+//const char* ws_host             = "alabino.ddns.net";
+//const int   ws_port             = 443;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
 const char* host = "KotelController";
 
 String deviceId = wifi_station_get_hostname();
 String headersString = "Origin: HomeControlApp\r\nDeviceId: " + deviceId;
 const char* headers =  (const char *) headersString.c_str();
+
+String fingerPrint = "0597dedb78f5fae3850839a03e7ddf1cf8cf9350";
 
 // VARIABLES
 byte bufData[9];  // буфер данных
@@ -57,8 +56,8 @@ int destKw = 0;
 String currentStage = "0_0";
 
 String ctrlComm = "";
-//long wait = 994;
-long wait = 600000;
+long wait = 994;
+//long wait = 6000;
 long count = 0;
 long pressDuration = 100;
 int statusId = 0;
@@ -113,9 +112,10 @@ void setup() {
   webSocket.setExtraHeaders(headers);
   webSocket.onEvent(webSocketEvent);
 
-  delay(2000);
   Serial.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   delay(1000);
+
+  //DEBUG_WEBSOCKETS("###############################################################");
 }
 
 void loop() {
@@ -130,12 +130,12 @@ void loop() {
   //Serial.println(count);
 
   if (statusId == 1 && count >= wait ) {
-    //Serial.println("==========================================");
+    Serial.println("======================================================================================");
     tp = 36.79; //ttRead(ds1);//+2;
     to = 27.23; //ttRead(ds2);
     kw = 11; //
     pr = 2.34; //
-    Serial.print("tp="); Serial.println(tp);
+    Serial.print("tp="); Serial.print(tp); Serial.print("  ");
     Serial.print("to="); Serial.println(to);
 
     String msg = "{\"action\":\"datasend\", \"type\":\"koteldata\", \"data\":{ \"deviceId\":\"" + deviceId + "\", "
@@ -163,7 +163,7 @@ void loop() {
     //Serial.println("Relay is off");
   }*/
 
-  delay(100);
+  delay(10);
 }
 
 void sendMessage(String & msg) {

@@ -104,6 +104,8 @@ func NewDB(connectionString string) (Database, error) {
 //#################################################################
 func (db Database) Auth(login string, password string) ([]*ent.User, error) {
 
+	//db.Conn.Conn(nil);
+
 	users := make([]*ent.User, 0)
 	//err := db.Conn.Select(&users, authQuery, login, password)
 

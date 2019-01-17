@@ -17,7 +17,7 @@ type Listener chan net.Conn
 
 var (
 	configurationPath = flag.String("config", "config.json", "Путь к файлу конфигурации")
-	cfg               = config.LoadConfig(*configurationPath)
+	Cfg               = config.LoadConfig(*configurationPath)
 )
 
 func init() { }
@@ -25,9 +25,9 @@ func init() { }
 func main() {
 	flag.Parse()
 
-	if cfg.LoggerPath != "" {
+	if Cfg.LoggerPath != "" {
 		// Логер только добавляет данные
-		logFile, err := os.OpenFile(cfg.LoggerPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		logFile, err := os.OpenFile(Cfg.LoggerPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 		if err != nil {
 			log.Printf("Ошибка открытия файла лога: %v", err)
 		} else {
@@ -36,16 +36,21 @@ func main() {
 		}
 	}
 
-	db, err := db.NewDB(cfg.DbConnectionString)
+	db, err := db.NewDB(Cfg.DbConnectionString)
 	if err != nil {
 		log.Printf("Не удалось подключиться к базе данных: %v", err)
 		return;
 	} else {
-		_, err = db.Conn.Exec("SET AUTOCOMMIT=1;")
-		if err != nil {
-			log.Printf("Не удалось установить настройки базы данных: %v", err)
-			return;
-		}
+		db.Conn.SetMaxOpenConns(50);
+		db.Conn.SetMaxIdleConns(5);
+		stats := db.Conn.Stats().OpenConnections
+		log.Printf("Open connections:", stats)
+		//_, err = db.Conn.Exec("SET AUTOCOMMIT=1;")
+		//if err != nil {
+		//	log.Printf("Не удалось установить настройки базы данных: %v", err)
+		//	return;
+		//}
+		defer db.Conn.Close();
 	}
 
 	go http.ListenAndServe(":80", http.HandlerFunc(redirect))
@@ -59,13 +64,13 @@ func main() {
 
 	//log.Fatal(http.ListenAndServe(*addr, nil))
 
-	listenString := cfg.Server.Address + ":" + cfg.Server.Port
+	listenString := Cfg.Server.Address + ":" + Cfg.Server.Port
 	log.Print("Сервер запущен: ", listenString)
 
 
 
-	if cfg.Server.TLS {
-		err = http.ListenAndServeTLS(listenString, cfg.Server.CertificatePath, cfg.Server.KeyPath, nil)
+	if Cfg.Server.TLS {
+		err = http.ListenAndServeTLS(listenString, Cfg.Server.CertificatePath, Cfg.Server.KeyPath, nil)
 	} else {
 		err = http.ListenAndServe(listenString, nil)
 	}
@@ -77,7 +82,7 @@ func main() {
 
 func redirect(w http.ResponseWriter, r *http.Request) {
 	log.Print("Host: ", r.Host)
-	listenString := "https://"+r.Host + ":" + cfg.Server.Port+"/home"
+	listenString := "https://"+r.Host + ":" + Cfg.Server.Port+"/home"
 	if len(r.URL.RawQuery) > 0 {
 		listenString += "?" + r.URL.RawQuery
 	}

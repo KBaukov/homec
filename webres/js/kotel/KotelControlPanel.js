@@ -19,13 +19,12 @@ Ext.define('KotelControlPanel', {
         this.destVal = ['25','60','11','1.8','e0','p0'];
         this.stage   = ['ot','vs','va','pr', 'es','es'];
         this.va      = ['2','4','7','9','11','14'];
-   
-        this.mode = 0;
 
+        this.desttc = 0;
+
+        this.mode = 0;
         this.curSatgeInx = 0;
         this.curVaInx = 4;
-        
-        this.command = '';
         
         this.initForm();
 
@@ -72,9 +71,7 @@ Ext.define('KotelControlPanel', {
                 this.bl =   document.getElementById("leftButt");
                 this.br =   document.getElementById("rightButt");
                 this.bo =   document.getElementById("mokButt");
-                //this.bl.onclick = this.leftClick;
-                //this.br.onclick = this.rightClick;
-                //this.bo.onclick = this.okClick;
+
 				this.bl.onclick = this.buttClick;
                 this.br.onclick = this.buttClick;
                 this.bo.onclick = this.buttClick;
@@ -83,7 +80,7 @@ Ext.define('KotelControlPanel', {
                 this.br.ontouch = this.buttClick;
                 this.bo.ontouch = this.buttClick;
 
-                this.getStage();
+                this.getValues();
                 
                 //this.dispCurrentView();
                 //this.getValues();
@@ -137,7 +134,7 @@ Ext.define('KotelControlPanel', {
             this.setLedPosition(this.curSatgeInx);
         }
         if(this.mode==1 && this.stage[this.curSatgeInx]=='ot') {
-            var val = this.destVal[this.curSatgeInx] == 'mm' ? 24 : (this.destVal[this.curSatgeInx] == '85' ? 84 : parseInt(this.destVal[this.curSatgeInx])) ;
+            var val = this.destVal[this.curSatgeInx] == 'mm' ? 24 : (this.destVal[this.curSatgeInx] == '80' ? 79 : parseInt(this.destVal[this.curSatgeInx])) ;
             val++;
             //if(val>99) { val = "mm"; }
 
@@ -243,15 +240,15 @@ Ext.define('KotelControlPanel', {
                 if(ansv.success) {
                     this.tp = parseFloat(ansv.data.tp);
                     this.to = parseFloat(ansv.data.to);
-                    this.destt = parseFloat(ansv.data.desttc);
+                    this.desttc = parseFloat(ansv.data.destTc);
 
                     this.currVal[0]=parseInt(ansv.data.tp)+"";
                     this.currVal[1]=parseInt(ansv.data.to)+"";
                     this.currVal[2]=parseInt(ansv.data.kw)+"";
                     if(!this.destInit) {
-                        this.destVal[0]=parseInt(ansv.data.desttp)+"";
-                        this.destVal[1]=parseInt(ansv.data.destto)+"";
-                        this.destVal[2]=parseInt(ansv.data.destkw)+"";
+                        this.destVal[0]=parseInt(ansv.data.destTp)+"";
+                        this.destVal[1]=parseInt(ansv.data.destTo)+"";
+                        this.destVal[2]=parseInt(ansv.data.destKw)+"";
                         if(this.destVal[0]<25) this.destVal[0]="mm";
                         if(this.destVal[1]<35) this.destVal[1]="mm";
                         this.destInit = true;
@@ -263,33 +260,33 @@ Ext.define('KotelControlPanel', {
             failure: function() { }
         });
     },
-    getStage: function() {
-        Ext.Ajax.request({
-            url: '/api/kotel/getvalues', scope: this, method: 'GET',
-            success: function(response, opts) {
-                var ansv = Ext.decode(response.responseText);
-                if(ansv.success) {
-                    var st = ansv.data.stage.split('_');
-                    this.mode = st[0];
-                    this.curSatgeInx = st[1];
-                    this.setLedPosition(this.curSatgeInx);
-                    if(this.mode==1) {
-                        this.startBlink();
-                        this.display(this.destVal[this.curSatgeInx]);
-                    }
-
-                    this.dispCurrentView();
-                } else error_mes('Ошибка', ansv.msg);
-            },
-            failure: function() { }
-        });
-    },
+    // getStage: function() {
+    //     Ext.Ajax.request({
+    //         url: '/api/kotel/getvalues', scope: this, method: 'GET',
+    //         success: function(response, opts) {
+    //             var ansv = Ext.decode(response.responseText);
+    //             if(ansv.success) {
+    //                 var st = ansv.data.stage.split('_');
+    //                 this.mode = st[0];
+    //                 this.curSatgeInx = st[1];
+    //                 this.setLedPosition(this.curSatgeInx);
+    //                 if(this.mode==1) {
+    //                     this.startBlink();
+    //                     this.display(this.destVal[this.curSatgeInx]);
+    //                 }
+    //
+    //                 this.dispCurrentView();
+    //             } else error_mes('Ошибка', ansv.msg);
+    //         },
+    //         failure: function() { }
+    //     });
+    // },
     setDest: function() {
         var suf = '.0';
         var currStage = this.mode+'_'+this.curSatgeInx;
         Ext.Ajax.request({
             url: '/api/kotel/setdest', scope: this, method: 'POST',
-            params: {desttp: this.destVal[0]+suf, destto: this.destVal[1]+suf, desttc: '25.0', destkw: this.destVal[2], destpr: this.destVal[3], stage: currStage},
+            params: {desttp: this.destVal[0]+suf, destto: this.destVal[1]+suf, desttc: this.desttc, destkw: this.destVal[2], destpr: this.destVal[3], stage: currStage},
             success: function(response, opts) {
               var ansv = Ext.decode(response.responseText);
               if(ansv.success) {  

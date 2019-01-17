@@ -266,7 +266,7 @@ func pingActiveDevices() {
 				log.Println("# Send ping to " + devId + " failed.  #")
 				deleteWsConn(devId)
 			} else {
-				log.Println("Send ping to " + devId + " success." )
+				log.Println("# Send ping to " + devId + " success. #" )
 			}
 		} else {
 			log.Println("# Device " + devId + " is die.        #" )

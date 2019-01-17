@@ -370,6 +370,7 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 		//##############################################
 		if r.URL.Path == "/api/kotel/getvalues" {
 			data, err := db.GetKotelData()
+			//log.Println("Values: ", data)
 			apiDataResponse(w, data, err)
 		}
 		if r.URL.Path == "/api/kotel/setdest" {
@@ -434,7 +435,7 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 				stage = kd.STAGE
 			}
 
-			log.Println("Values: ", destto, desttp, destkw, destpr, desttc, stage)
+			log.Println("Dest values: ", destto, desttp, destkw, destpr, desttc, stage)
 
 			_, kotelName, err = db.GetKotelID()
 			if err != nil || kotelName == "" {

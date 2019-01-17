@@ -5,8 +5,8 @@
 		"Address": "0.0.0.0",
 		"Port": "8085",
 		"TLS": true,
-		"CertificatePath": "./ssl/server.crt",
-		"KeyPath": "./ssl/server.key"
+		"CertificatePath": "./ssl/alabino.ddns.crt",
+		"KeyPath": "./ssl/alabino.ddns.key"
 	},
 	"WsAllowedOrigin": "HomeControlApp"
 }
