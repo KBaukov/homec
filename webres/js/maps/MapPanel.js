@@ -29,17 +29,80 @@ Ext.define('MapPanel', {
         this.listeners = { scope: this,
             render: function() {
                 this.getSensorsData();
-                Ext.TaskManager.start(this.task);
+                this.wss.send("{\"action\":\"getDestValues\",\"type\":\"koteldata\"}");
+                //Ext.TaskManager.start(this.task);
 
             },
             resize: function() {
                 this.resizeImage();
             }
         };
-        this.task = { scope: this,
-            run: function() { this.getValues() },
-            interval: 5000
+        // this.task = { scope: this,
+        //     run: function() { this.getValues() },
+        //     interval: 5000
+        // };
+
+
+
+        Ext.define('KatelData', {
+            extend: 'Ext.data.Model',
+            fields: [
+                {name: 'device_id', type: 'string'},
+                {name: 'to',  type: 'float'},
+                {name: 'tp',  type: 'float'},
+                {name: 'kw',  type: 'int'},
+                {name: 'pr',  type: 'float'},
+                {name: 'destTo',  type: 'float'},
+                {name: 'destTp',  type: 'float'},
+                {name: 'destKw',  type: 'int'},
+                {name: 'destPr',  type: 'float'},
+                {name: 'stage',  type: 'string'}
+            ]
+        });
+
+        this.store = Ext.create('Ext.data.Store', {
+            model: 'KatelData', id: this.id+'_DevStore'
+        });
+
+        this.wss = new WebSocket("wss://"+window.location.host+"/ws");
+
+        this.wss.onopen = function() {
+            console.log("WSS Соединение установлено.");
         };
+
+        this.wss.onclose = function(event) {
+            if (event.wasClean) {
+                console.log('Соединение закрыто чисто');
+            } else {
+                console.log('Обрыв соединения'); // например, "убит" процесс сервера
+            }
+            console.log('Код: ' + event.code + ' причина: ' + event.reason);
+        };
+
+        this.wss.onmessage = function(event) {
+            var data = event.data;
+            console.log("Получены данные: " + data);
+
+            // var sens = Ext.getDom(this.mapData.id+'_sensor_'+opts.params.id);
+            // if(ansv.success) {
+            //     sens.style.opacity = 1;
+            //     //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
+            //     sens.innerHTML = parseFloat(ansv.data.tp) +'°C</br></br>'
+            //         + parseFloat(ansv.data.to)+'°C</br></br>'
+            //     //+ parseFloat(ansv.data.kw)+'kw'
+            //     ;
+            // } else {
+            //     if(ansv.msg=='нет данных') {
+            //         sens.style.opacity = 0.2;
+            //     } else error_mes('Ошибка', ansv.msg);
+            // }
+        };
+
+        this.wss.onerror = function(error) {
+            console.log("Ошибка " + error.message);
+        };
+
+
     },
     resizeImage: function() {
         var h = this.getHeight();

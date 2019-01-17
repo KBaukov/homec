@@ -44,12 +44,12 @@ var (
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		deviceOrigin := r.Header.Get("Origin")
-		if WsAllowedOrigin != deviceOrigin {
-			log.Println("Origin not allowed:", deviceOrigin)
-			//log.Println("Origin want:", WsAllowedOrigin)
-			return false
-		}
+		//deviceOrigin := r.Header.Get("Origin")
+		//if WsAllowedOrigin != deviceOrigin {
+		//	log.Println("Origin not allowed:", deviceOrigin)
+		//	//log.Println("Origin want:", WsAllowedOrigin)
+		//	return false
+		//}
 		return true
 	},
 }
@@ -60,6 +60,9 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 		var ws *websocket.Conn
 		var err error
 		deviceId := r.Header.Get("DeviceId")
+		if deviceId =="" {
+			deviceId = "user_" + r.Header.Get("Sec-WebSocket-Key")
+		}
 
 		log.Println("incoming WS request from: ", deviceId)
 
@@ -110,6 +113,8 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 		if strings.Contains(msg, "\"action\":\"connect\"") {
 			if !sendMsg(c, "{action:connect,success:true}") {
 				break
+			} else {
+				log.Println("{action:connect,success:true}", c)
 			}
 		}
 		//log.Println("++++++++++++++++++++++++")
@@ -150,6 +155,8 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 					if err != nil {
 						log.Println("Error data writing in db: ", err)
 					}
+
+					sendDataToUsers(msg);
 
 				}
 
@@ -280,4 +287,17 @@ func pingActiveDevices() {
 func deleteWsConn(dId string) {
 	WsConnections[dId] = nil
 	delete(WsConnections, dId)
+}
+
+func sendDataToUsers(msg string) {
+	for devId, c := range WsConnections {
+		if strings.Contains(devId, "user_") {
+			if !sendMsg(c, msg) {
+				log.Println("# Send data to " + devId + " failed.  #")
+				deleteWsConn(devId)
+			} else {
+				log.Println("# Send data to " + devId + " success. #" )
+			}
+		}
+	}
 }
