@@ -235,19 +235,19 @@ Ext.define('KotelControlPanel', {
                     this.currVal[0]=parseInt(ansv.data.tp)+"";
                     this.currVal[1]=parseInt(ansv.data.to)+"";
                     this.currVal[2]=parseInt(ansv.data.kw)+"";
-                    if(!this.destInit) {
-                        this.destVal[0]=parseInt(ansv.data.destTp)+"";
-                        this.destVal[1]=parseInt(ansv.data.destTo)+"";
-                        this.destVal[2]=parseInt(ansv.data.destKw)+"";
-                        if(this.destVal[0]<25) this.destVal[0]="mm";
-                        if(this.destVal[1]<35) this.destVal[1]="mm";
+                    //if(!this.destInit) {
+                    this.destVal[0]=parseInt(ansv.data.destTp)+"";
+                    this.destVal[1]=parseInt(ansv.data.destTo)+"";
+                    this.destVal[2]=parseInt(ansv.data.destKw)+"";
+                    if(this.destVal[0]<25) this.destVal[0]="mm";
+                    if(this.destVal[1]<35) this.destVal[1]="mm";
 
-                        var stage = ansv.data.stage.split('_');
-                        this.mode = stage[0];
-                        this.curSatgeInx = stage[1];
+                    var stage = ansv.data.stage.split('_');
+                    this.mode = stage[0];
+                    this.curSatgeInx = stage[1];
 
-                        this.destInit = true;
-                    }
+                    this.destInit = true;
+                    //}
 
                     this.dispCurrentView();
                 } else error_mes('Ошибка', ansv.msg);

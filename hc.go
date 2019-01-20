@@ -2,14 +2,14 @@ package main
 
 import (
 	"flag"
-	"homec/config"
-	"homec/db"
-	"homec/handle"
 	"log"
 	"net"
 	"net/http"
 	"os"
 
+	"github.com/KBaukov/homec/config"
+	"github.com/KBaukov/homec/db"
+	"github.com/KBaukov/homec/handle"
 	_ "github.com/go-sql-driver/mysql"
 )
 
