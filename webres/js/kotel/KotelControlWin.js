@@ -105,16 +105,7 @@ Ext.define('KotelControlWin', {
         if(data.success) {
             if (data.hash == hash) {
                 if(butt) {
-                    var ctrl = conn.papa.kotelControlPanel;
-                    if(butt=='L')
-                        ctrl.leftClick();
-                    if(butt=='R')
-                        ctrl.rightClick();
-                    if(butt=='M')
-                        ctrl.okClick();
-
-                    ctrl.setDest();
-                    ctrl.setDisabled(false);
+                    conn.papa.kotelControlPanel.onMessage(butt);
                 }
 
                 if(data.action =='sessionStart') {

@@ -119,8 +119,8 @@ void loop() {
 
   if (statusId == 1 && count >= wait ) {
     Serial.println("======================================================================================");
-    tp = ttRead(ds1);//+2;
-    to = ttRead(ds2);
+    tp = 30.44; //ttRead(ds1);//+2;
+    to = 40.55; //ttRead(ds2);
     kw = 11; //
     pr = 2.34; //
     Serial.print("tp="); Serial.print(tp); Serial.print("  ");
@@ -213,10 +213,12 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
           String butt =   parseData(text, "butt");
           String sender = parseData(text, "sender");
           String hash =   parseData(text, "hash");
+          String stage =  parseData(text, "satge");
           presKey(butt);
           String rMsg = "{\"success\":true,\"butt\":\""+butt+"\",\"hash\":\""+hash+"\"}";
           String msg = "{\"action\":\"resend\",\"recipient\":\""+sender+"\",\"msg\":\""+b64encode(rMsg)+"\"}";
           sendMessage(msg);
+          currentStage = stage;
         } else if (text.indexOf("\"action\":\"setDestValues\"") > -1) {
           parseDestData(text);
           String ansver = "{\"action\":\"setDestValues\", \"success\":true}";
