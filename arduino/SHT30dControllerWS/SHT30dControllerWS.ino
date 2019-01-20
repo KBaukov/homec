@@ -28,8 +28,8 @@ Adafruit_SHT31 sht30 = Adafruit_SHT31();
 const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 
-const char* ws_host               = "alabino.ddns.net";
-const int   ws_port               = 443;
+const char* ws_host               = "192.168.0.188";
+const int   ws_port               = 8085;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
 
 String deviceId = wifi_station_get_hostname();
@@ -95,9 +95,9 @@ void loop() {
 */
   
   if(statusId == 1 && count >= wait ) {
-    temp = sht30.readTemperature(); 
-    hum  = sht30.readHumidity();
-    //temp = 28.35; hum = 54.56;
+    //temp = sht30.readTemperature(); 
+    //hum  = sht30.readHumidity();
+    temp = 22.35; hum = 54.56;
     if (isnan(hum) || isnan(temp)) {    
       Serial.println("SHT Error!");
     } else {

@@ -43,15 +43,15 @@ Ext.onReady(function(){
 
   body.onmousemove = function(e) {
       slCounter = false;
-      console.log('--- ' + slCounter);
+      //console.log('--- ' + slCounter);
   };
   body.ontouch = function(e) {
     slCounter = false;
-    console.log('--- ' + slCounter);
+    //console.log('--- ' + slCounter);
   };
   body.onclick = function(e) {
         slCounter = false;
-        console.log('--- ' + slCounter);
+        //console.log('--- ' + slCounter);
   };
   slCounter = false;
   screenLockT=setTimeout(screenLock, 300000);

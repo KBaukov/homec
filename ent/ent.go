@@ -87,6 +87,14 @@ type SensorsData struct {
 type WsSendData struct {
 	ACTION string      `json"action"`
 	TYPE   string      `json"type"`
+	SENDER string 	   `json"sender"`
 	DATA   interface{} `json:"data"`
+}
+
+type ResendMessage struct {
+	ACTION 		string `json"action"`
+	RECIPIENT   string `json"recipient"`
+	SENDER		string `json"sender"`
+	MESSAGE   	string `json:"msg"`
 }
 

@@ -49,6 +49,9 @@ Ext.define('KotelControlPanel', {
                 +'<div id="dig1"></div><div id="dig2"></div><div id="dot"></div>'
                 +'<div id="leftButt"></div><div id="rightButt"></div><div id="mokButt"></div>'
                 +'</div>';
+
+        this.kotelId = devices.getKotelId();
+
        
         // this.tbar = [
         //     Ext.create('Ext.Button', {text: 'Отменить', scope: this, disabled: false, id: 'execButt',
@@ -85,8 +88,13 @@ Ext.define('KotelControlPanel', {
                 //this.dispCurrentView();
                 //this.getValues();
                 //Ext.TaskManager.start(this.valuesTask);
+            },
+            beforedestroy: function() {
+                //this.wss.close();
             }
         };
+
+
     },
     leftClick: function(ev) {
         //var cmp =Ext.getCmp('kotelControlPanel');
@@ -204,33 +212,15 @@ Ext.define('KotelControlPanel', {
         var id = ev.target.id;
 		var butt = id.substring(0,1).toUpperCase();
 		var cmp =Ext.getCmp('kotelControlPanel');
+        var stage = cmp.mode+'_'+cmp.curSatgeInx;
+        var hash = btoa((new Date()).toLocaleString());
+        var rMsg = '{"action":"resend", "recipient":"'+cmp.kotelId+'", "msg":"'
+            +btoa('{"action":"pessButton","butt":"'+butt+'","sender":"","hash":"'+hash+'"}')
+        +'"}';
 		cmp.setDisabled(true);
-
-		//var stage = cmp.mode+'_'+cmp.curSatgeInx;
-		
-        Ext.Ajax.request({
-            url: '/api/kotel/pressbutt', scope: this, method: 'POST',
-            params: {button: butt},
-            success: function(response, opts) {
-              var ansv = Ext.decode(response.responseText);
-			  
-              if(ansv.success) { 
-				
-				if(butt=='L')
-					cmp.leftClick();
-				if(butt=='R')
-					cmp.rightClick();
-				if(butt=='M')
-					cmp.okClick();
-
-				cmp.setDest();
-
-				cmp.setDisabled(false);
-                
-              } else { error_mes('Ошибка', ansv.msg); cmp.setDisabled(false); }  
-            },
-            failure: function() { }
-        });
+		cmp.papa.wss.butt = butt;
+		cmp.papa.wss.hash = hash;
+        cmp.papa.wss.send(rMsg);
     },
     getValues: function() {
         Ext.Ajax.request({
@@ -251,6 +241,11 @@ Ext.define('KotelControlPanel', {
                         this.destVal[2]=parseInt(ansv.data.destKw)+"";
                         if(this.destVal[0]<25) this.destVal[0]="mm";
                         if(this.destVal[1]<35) this.destVal[1]="mm";
+
+                        var stage = ansv.data.stage.split('_');
+                        this.mode = stage[0];
+                        this.curSatgeInx = stage[1];
+
                         this.destInit = true;
                     }
 
@@ -260,46 +255,12 @@ Ext.define('KotelControlPanel', {
             failure: function() { }
         });
     },
-    // getStage: function() {
-    //     Ext.Ajax.request({
-    //         url: '/api/kotel/getvalues', scope: this, method: 'GET',
-    //         success: function(response, opts) {
-    //             var ansv = Ext.decode(response.responseText);
-    //             if(ansv.success) {
-    //                 var st = ansv.data.stage.split('_');
-    //                 this.mode = st[0];
-    //                 this.curSatgeInx = st[1];
-    //                 this.setLedPosition(this.curSatgeInx);
-    //                 if(this.mode==1) {
-    //                     this.startBlink();
-    //                     this.display(this.destVal[this.curSatgeInx]);
-    //                 }
-    //
-    //                 this.dispCurrentView();
-    //             } else error_mes('Ошибка', ansv.msg);
-    //         },
-    //         failure: function() { }
-    //     });
-    // },
     setDest: function() {
         var suf = '.0';
         var currStage = this.mode+'_'+this.curSatgeInx;
         Ext.Ajax.request({
             url: '/api/kotel/setdest', scope: this, method: 'POST',
             params: {desttp: this.destVal[0]+suf, destto: this.destVal[1]+suf, desttc: this.desttc, destkw: this.destVal[2], destpr: this.destVal[3], stage: currStage},
-            success: function(response, opts) {
-              var ansv = Ext.decode(response.responseText);
-              if(ansv.success) {  
-
-              } else error_mes('Ошибка', ansv.msg);  
-            },
-            failure: function() { }
-        });
-    },
-    pressButt: function(butt) {
-        Ext.Ajax.request({
-            url: '/api/kotel/pressbutt', scope: this, method: 'POST',
-            params: {button: butt},
             success: function(response, opts) {
               var ansv = Ext.decode(response.responseText);
               if(ansv.success) {  

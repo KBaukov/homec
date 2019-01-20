@@ -1,6 +1,7 @@
 package handle
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"github.com/jasonlvhit/gocron"
 	"homec/db"
@@ -35,6 +36,7 @@ func internalError(ws *websocket.Conn, msg string, err error) {
 
 var (
 	WsConnections     = make(map[string]*websocket.Conn)
+	WsAsignConns	  = make(map[string]string)
 	//configurationPath = flag.String("config", "config.json", "Путь к файлу конфигурации")
 	//cfg               = config.LoadConfig(*configurationPath)
 	WsAllowedOrigin   = "HomeControlApp" //homec.Cfg.WsAllowedOrigin
@@ -61,7 +63,8 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 		var err error
 		deviceId := r.Header.Get("DeviceId")
 		if deviceId =="" {
-			deviceId = "user_" + r.Header.Get("Sec-WebSocket-Key")
+			deviceId = "br_" + r.Header.Get("Sec-WebSocket-Key")[0:7]
+			//
 		}
 
 		log.Println("incoming WS request from: ", deviceId)
@@ -72,6 +75,8 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 			return
 		}
 		//defer ws.Close() !!!! Important
+
+		ws.SetCloseHandler(wsClose);
 
 		WsConnections[deviceId] = ws
 		if(ws != nil) {
@@ -85,6 +90,12 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 
 
 	}
+}
+
+func wsClose(code int, reason string) error  {
+
+
+	return nil
 }
 
 func ping(appData string) error {
@@ -111,19 +122,40 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 		msg := string(message)
 
 		if strings.Contains(msg, "\"action\":\"connect\"") {
-			if !sendMsg(c, "{action:connect,success:true}") {
+			if !sendMsg(c, "{\"action\":\"connect\",\"success\":true}") {
 				break
 			} else {
+				if strings.Contains(msg, "\"assign\":") {
+					assign := msg[30:len(msg)-2]
+					WsAsignConns[devId] = assign
+					log.Println("#### Assign", assign, " to ", devId)
+				}
 				log.Println("{action:connect,success:true}", c)
 			}
 		}
-		//log.Println("++++++++++++++++++++++++")
+		if strings.Contains(msg, "\"action\":\"resend\"") {
+			var rMsg ent.ResendMessage
+
+			err = json.Unmarshal([]byte(msg), &rMsg)
+			if err != nil {
+				log.Println("Error data unmarshaling: ", err)
+			}
+
+			rConn := WsConnections[rMsg.RECIPIENT]
+			sender := getDevIdByConn(c)
+
+			message, _ := base64.URLEncoding.DecodeString(rMsg.MESSAGE)
+			mm := strings.Replace(string(message),"\"sender\":\"\"", "\"sender\":\""+sender+"\"", 1)
+			log.Println("[WS]:resend message: ",  mm, " to: ",  rMsg.RECIPIENT)
+			sendMsg(rConn, mm)
+		}
+
 		if strings.Contains(msg, "\"action\":\"datasend\"") {
-			//log.Println("-----------------------------")
+
 			if strings.Contains(msg, "\"type\":\"koteldata\"") {
 				var data ent.KotelData
 
-				wsData := ent.WsSendData{"", "", ""}
+				wsData := ent.WsSendData{"", "", "", ""}
 
 				err = json.Unmarshal([]byte(msg), &wsData)
 				if err != nil {
@@ -140,13 +172,10 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 					log.Println("Error data unmarshaling: ", err)
 				}
 
-				log.Println("incoming kotel data:", data)
-
 				if !sendMsg(c, "{action:datasend,success:true}") {
-					log.Println("Send to " + devId + ": failed")
 					break
 				} else {
-					log.Println("Send to " + devId + ": success")
+
 					err = db.UpdKotelMeshData(data.TO, data.TP, data.KW, data.PR)
 					if err != nil {
 						log.Println("Error data writing in db: ", err)
@@ -156,7 +185,7 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 						log.Println("Error data writing in db: ", err)
 					}
 
-					sendDataToUsers(msg);
+					sendDataToWeb(msg, getDevIdByConn(c));
 
 				}
 
@@ -165,7 +194,7 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 			if strings.Contains(msg, "\"type\":\"roomdata\"") {
 				var data ent.SensorsData
 
-				wsData := ent.WsSendData{"", "", ""}
+				wsData := ent.WsSendData{"", "", "", ""}
 
 				err = json.Unmarshal([]byte(msg), &wsData)
 				if err != nil {
@@ -184,18 +213,16 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 
 				data.DATE = time.Now();
 
-				log.Println("incoming room data:", data)
-
 				if !sendMsg(c, "{action:datasend,success:true}") {
-					log.Println("Send to " + devId + ": failed")
 					break
 				} else {
-					log.Println("Send to " + devId + ": success")
 					success, err := db.AddRoomData(data)
 					if err != nil || !success {
 						log.Println("Error data writing in db: ", err)
 					}
 				}
+
+				sendDataToWeb(msg, getDevIdByConn(c));
 
 			}
 		}
@@ -217,10 +244,10 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 			}
 
 		}
-		if strings.Contains(msg, "\"action\":\"getDestValues\"") {
+		if strings.Contains(msg, "\"action\":\"getLastValues\"") {
 			if strings.Contains(msg, "\"type\":\"koteldata\"") {
 				kd, err := db.GetKotelData()
-				log.Println("Get dest data from db: ", kd)
+				log.Println("Get last data from db: ", kd)
 				if err != nil {
 					log.Println("Error while read data from data base: ", err)
 				}
@@ -231,15 +258,21 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 				}
 
 				sData := string(kData)
-				msg := "{\"action\":\"setDestValues\"," + sData[66:len(sData)]
-				//msg := strings.Replace(sData, "{", "{\"action\":\"setDestValues\", ", 1)
-				//msg := "{\"action\":\"setDestValues\",\"device_id\":\"ESP_6822FC\",\"to\":65.35,\"tp\":50.34,\"kw\":11,\"pr\":2.43,\"destTo\":36.0,\"destTp\":29.0,\"destKw\":2,\"destPr\":1.8,\"destTc\":25.0,\"stage\":\"0_1\"}"
-				log.Println("Dest Data is: ", msg)
+				msg := "{\"action\":\"setLastValues\"," + sData[1:len(sData)]
+				log.Println("Last Data is: ", msg)
 				if !sendMsg(c, msg) {
 					break
 				}
 			}
+			if strings.Contains(msg, "\"type\":\"roomdata\"") {
 
+			}
+
+		}
+		if strings.Contains(msg, "\"action\":\"getMeshValues\"") {
+			if strings.Contains(msg, "\"type\":\"koteldata\"") {
+
+			}
 		}
 	}
 
@@ -251,6 +284,8 @@ func sendMsg(c *websocket.Conn, m string) bool {
 		log.Println("[WS]:send:", err)
 		return false
 	}
+	devId := getDevIdByConn(c)
+	log.Println("[WS]:send to " + devId + " success: "+m)
 	return true
 }
 
@@ -260,7 +295,6 @@ func getDevIdByConn(c *websocket.Conn) string {
 			return k
 		}
 	}
-
 	return ""
 }
 
@@ -269,7 +303,7 @@ func pingActiveDevices() {
 	log.Println("########## Ping Devices ############")
 	for devId, c := range WsConnections {
 		if c != nil {
-			if !sendMsg(c, "ping") {
+			if !sendMsg(c, "{\"action\":\"ping\"}") {
 				log.Println("# Send ping to " + devId + " failed.  #")
 				deleteWsConn(devId)
 			} else {
@@ -287,14 +321,21 @@ func pingActiveDevices() {
 func deleteWsConn(dId string) {
 	WsConnections[dId] = nil
 	delete(WsConnections, dId)
+	delete(WsAsignConns, dId)
 }
 
-func sendDataToUsers(msg string) {
+func sendDataToWeb(msg string, sender string) {
 	for devId, c := range WsConnections {
-		if strings.Contains(devId, "user_") {
+		if c==nil {
+			deleteWsConn(devId);
+			break;
+		}
+		assDev := getDevIdByConn(c)
+		assRcp := WsAsignConns[assDev]
+		if strings.Contains(devId, "br_") && sender==assRcp {
 			if !sendMsg(c, msg) {
 				log.Println("# Send data to " + devId + " failed.  #")
-				deleteWsConn(devId)
+				//deleteWsConn(devId)
 			} else {
 				log.Println("# Send data to " + devId + " success. #" )
 			}

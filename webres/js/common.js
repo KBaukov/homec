@@ -170,5 +170,29 @@ function getElementPosition(elemId) {
     return {"left":l, "top":t, "width": w, "height":h};
 }
 
+WssConnections = {
+    connections: [],
+    getConnByEl: function(el) {
+        var n = this.connections.length;
+        for( var i=0; i<n; i++) {
+            if( this.connections[i].el == el )
+                return this.connections[i].conn;
+        }
+    },
+    getElByConn: function(conn) {
+        var n = this.connections.length;
+        for( var i=0; i<n; i++) {
+            if( this.connections[i].conn == conn )
+                return this.connections[i].el;
+        }
+    },
+    deleteByConn: function(conn) {
+        var n = this.connections.length;
+        for( var i=0; i<n; i++) {
+            if( this.connections[i].conn == conn )
+                delete this.connections[i];
+        }
+    }
+};
 
 
