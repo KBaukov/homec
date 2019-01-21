@@ -29,7 +29,7 @@ const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 //const char* wlan_ssid           = "Home";
 //const char* wlan_password       = "4r3e2w1q";
-const char* ws_host               = "192.168.0.188";
+const char* ws_host               = "192.168.43.175";
 const int   ws_port               = 8085;
 //const char* ws_host             = "alabino.ddns.net";
 //const int   ws_port             = 443;
@@ -119,8 +119,8 @@ void loop() {
 
   if (statusId == 1 && count >= wait ) {
     Serial.println("======================================================================================");
-    tp = 30.44; //ttRead(ds1);//+2;
-    to = 40.55; //ttRead(ds2);
+    tp = ttRead(ds1);//+2;
+    to = ttRead(ds2);
     kw = 11; //
     pr = 2.34; //
     Serial.print("tp="); Serial.print(tp); Serial.print("  ");
@@ -213,7 +213,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
           String butt =   parseData(text, "butt");
           String sender = parseData(text, "sender");
           String hash =   parseData(text, "hash");
-          String stage =  parseData(text, "satge");
+          String stage =  parseData(text, "stage");
           presKey(butt);
           String rMsg = "{\"success\":true,\"butt\":\""+butt+"\",\"hash\":\""+hash+"\"}";
           String msg = "{\"action\":\"resend\",\"recipient\":\""+sender+"\",\"msg\":\""+b64encode(rMsg)+"\"}";
@@ -224,7 +224,11 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
           String ansver = "{\"action\":\"setDestValues\", \"success\":true}";
           sendMessage(ansver);          
         } else if (text.indexOf("setDelay") > -1) {
-
+          String d = parseData(text, "delay");
+          wait = d.toInt();
+          Serial.print("Change wait to: ");
+          Serial.println(wait);
+          
         } else if (text.indexOf("reset") > -1) {
           resetDevice();
         }
@@ -307,20 +311,6 @@ void parseDestData(String json) {
 
 }
 
-/*char parseButtData(String json) {
-  char cc[2];
-  //Serial.println("Parse Button Data:");
-  StaticJsonBuffer<500> jsonBuffer;
-  JsonObject& root = jsonBuffer.parseObject(json);
-  if (!root.success()) {
-    Serial.println("parseObject() failed");
-    return 0;
-  }
-  String butt = root["butt"];
-  butt.toCharArray(cc, 2);
-  return cc[0];
-}*/
-
 String parseData(String json, String key) {
   StaticJsonBuffer<500> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
@@ -397,6 +387,8 @@ void presKey(String butt) {
 
 void resetDevice() {
   Serial.println("Reset...");
-  digitalWrite(RSTPIN, LOW);
-  delay(1000);
+  //digitalWrite(RSTPIN, LOW);
+  //delay(1000);
+ parseDestData("{sadasd:asdas}");
+  //Serial.println(ff);
 }

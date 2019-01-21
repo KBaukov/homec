@@ -21,6 +21,7 @@ const (
 	pongWait = 60 * time.Second 		// Time allowed to read the next pong message from the peer.
 	pingPeriod = (pongWait * 9) / 10	// Send pings to peer with this period. Must be less than pongWait.
 	closeGracePeriod = 10 * time.Second	// Time to wait before force close on connection.
+	brPref = "WBR_"
 )
 
 func init() {
@@ -63,8 +64,8 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 		var err error
 		deviceId := r.Header.Get("DeviceId")
 		if deviceId =="" {
-			deviceId = "br_" + r.Header.Get("Sec-WebSocket-Key")[0:7]
-			//
+			suf,_ := HashPass(r.Header.Get("Sec-WebSocket-Key"));
+			deviceId = brPref +strings.ToUpper(suf[12:18])
 		}
 
 		log.Println("incoming WS request from: ", deviceId)
@@ -176,7 +177,7 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 					break
 				} else {
 
-					err = db.UpdKotelMeshData(data.TO, data.TP, data.KW, data.PR)
+					err = db.UpdKotelMeshData(data.TO, data.TP, data.KW, data.PR, data.STAGE)
 					if err != nil {
 						log.Println("Error data writing in db: ", err)
 					}
@@ -332,7 +333,7 @@ func sendDataToWeb(msg string, sender string) {
 		}
 		assDev := getDevIdByConn(c)
 		assRcp := WsAsignConns[assDev]
-		if strings.Contains(devId, "br_") && sender==assRcp {
+		if strings.Contains(devId, brPref) && sender==assRcp {
 			if !sendMsg(c, msg) {
 				log.Println("# Send data to " + devId + " failed.  #")
 				//deleteWsConn(devId)
@@ -342,3 +343,4 @@ func sendDataToWeb(msg string, sender string) {
 		}
 	}
 }
+

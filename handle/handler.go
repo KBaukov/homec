@@ -99,7 +99,7 @@ func ServeLogin(db db.DbService) http.HandlerFunc {
 			login := strings.ToLower(r.PostFormValue("username"))
 			pass := r.PostFormValue("password")
 
-			pass, err := hashPass(pass)
+			pass, err := HashPass(pass)
 			if err != nil {
 				log.Println("Ошибка хеширования", err)
 			}
@@ -223,7 +223,7 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 
 			login := r.PostFormValue("login")
 			pass := r.PostFormValue("pass")
-			pass, err = hashPass(pass)
+			pass, err = HashPass(pass)
 			if err != nil {
 				log.Println("Ошибка хеширования", err)
 			}
@@ -393,26 +393,12 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			p5 := r.PostFormValue("desttc");
 			p6 := r.PostFormValue("stage");
 
-			if p1 != "" {
-				if(p1=="mm.0") {
-					desttp = 1.00;
-				} else {
-					desttp, _ = strconv.ParseFloat(p1, 64)
-				}
-			}
-			if p2 != "" {
-				if(p2=="mm.0") {
-					destto = 1.00;
-				} else {
-					destto, _ = strconv.ParseFloat(p2, 64)
-				}
-			}
-
-			if p3 != "" {destkw, _ = strconv.Atoi(p3) }
-			if p4 != "" {destpr, _ = strconv.ParseFloat(p4, 64) }
-			if p5 != "" {desttc, _ = strconv.ParseFloat(p5, 64) }
-			if p6 != "" {stage = p6; }
-
+			if p1 != "" { desttp, _ = strconv.ParseFloat(p1, 64); }
+			if p2 != "" { destto, _ = strconv.ParseFloat(p2, 64); }
+			if p3 != "" { destkw, _ = strconv.Atoi(p3); }
+			if p4 != "" { destpr, _ = strconv.ParseFloat(p4, 64); }
+			if p5 != "" { desttc, _ = strconv.ParseFloat(p5, 64); }
+			if p6 != "" { stage = p6; }
 
 			kd, err := db.GetKotelData()
 
@@ -445,8 +431,10 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			if ws == nil {
 				err = errors.New("Сессия не активна")
 			} else {
-				msg = "{\"action\":\"setDestValues\", \"destTo\":" + strings.Replace(p2, "mm", "0", 1) + ",  \"destTp\":" + strings.Replace(p1, "mm", "0", 1) + ",  \"destTc\":" + p5 + ",  \"destPr\":" + p4 + ",  \"destKw\":" + p3 + ",  \"stage\":\"" + stage + "\" }"
-				log.Printf("Sending message to %s: %s", kotelName, msg)
+				msg = "{\"action\":\"setDestValues\",\"destTo\":" + p2 + ",\"destTp\":" + p1 + ",\"destTc\":" +
+					p5 + ",\"destPr\":" + p4 + ",\"destKw\":" + p3 + ",\"stage\":\"" + stage + "\"}";
+
+				log.Printf("[WS]:send to %s: %s", kotelName, msg)
 				err = ws.WriteMessage(1, []byte(msg))
 				if err != nil {
 					log.Println("Sending message error:", err)
@@ -606,7 +594,7 @@ func apiDataResponse(w http.ResponseWriter, data interface{}, err error) {
 
 //########################## helpers ############################
 
-func hashPass(p string) (string, error) {
+func HashPass(p string) (string, error) {
 	h := sha256.New()
 	_, err := h.Write([]byte(p))
 	if err != nil {

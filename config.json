@@ -1,5 +1,5 @@
 {
-    "DbConnectionString": "hc:jajako@tcp(localhost:3306)/hc?parseTime=true",
+    "DbConnectionString": "hc:jajako@tcp(10.199.28.102:3306)/hc?parseTime=true",
     "LoggerPath": "._/logs/hc.log",
 	"Server": {
 		"Address": "0.0.0.0",

@@ -55,7 +55,7 @@ Ext.define('KotelControlWin', {
     },
     closeWin: function(ev) {
 
-        this.stopSession();
+        this.kotelControlPanel.setDest();
 
         // Ext.Ajax.request({
         //     url: '/api/kotel/sessionstop', scope: this, method: 'POST',
@@ -104,7 +104,7 @@ Ext.define('KotelControlWin', {
         var cmp = conn.papa;
         if(data.success) {
             if (data.hash == hash) {
-                if(butt) {
+                if(butt=='M' || butt=='L' || butt=='R') {
                     conn.papa.kotelControlPanel.onMessage(butt);
                 }
 
@@ -117,11 +117,15 @@ Ext.define('KotelControlWin', {
                     cmp.close();
                 }
 
+                //if(data.action =='setDestValues') {
+
+                //}
+
             }
         } { if(data.success === false) error_mes('Ошибка', data.msg); }
     },
     startSession: function() {
-        var hash = btoa((new Date()).toLocaleString());
+        var hash = md5((new Date()).toLocaleString());
         var rMsg = '{"action":"resend", "recipient":"'+this.kotelId+'", "msg":"'
             +btoa('{"action":"sessionStart","sender":"","hash":"'+hash+'"}')
             +'"}';
@@ -129,7 +133,7 @@ Ext.define('KotelControlWin', {
         this.wss.send(rMsg);
     },
     stopSession: function() {
-        var hash = btoa((new Date()).toLocaleString());
+        var hash = md5((new Date()).toLocaleString());
         var rMsg = '{"action":"resend", "recipient":"'+this.kotelId+'", "msg":"'
             +btoa('{"action":"sessionStop","sender":"","hash":"'+hash+'"}')
             +'"}';
