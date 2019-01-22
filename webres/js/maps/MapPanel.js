@@ -98,6 +98,7 @@ Ext.define('MapPanel', {
                         var sens = Ext.getDom(this.mapData.id+'_sensor_'+opts.params.id);
                         if(ansv.success) {
                             this.dataRender('koteldata', sens, ansv);
+                            sens.style.opacity = 0.2;
                         } else {
                             if(ansv.msg=='нет данных') {
                                 sens.style.opacity = 0.2;
@@ -115,9 +116,10 @@ Ext.define('MapPanel', {
                         var sens = Ext.getDom(this.mapData.id+'_sensor_'+opts.params.id);
                         if(ansv.success) {
                             this.dataRender('roomdata', sens, ansv);
+                            sens.style.opacity = 0.2;
                         }  else {
                             if(ansv.msg=='нет данных') {
-                                sens.style.opacity = 0.2;
+                                //sens.style.opacity = 0.2;
                             } else error_mes('Ошибка', ansv.msg);
                         }
                     },
@@ -180,16 +182,16 @@ Ext.define('MapPanel', {
 
         wss.dataRender = this.dataRender;
         WssConnections.connections.push( {el:el, conn: wss} );
+        el.style.opacity = 0.2;
     },
     dataRender: function(type, sens, data) {
         if(type == 'koteldata') {
-            sens.style.opacity = 1;
             sens.innerHTML = parseFloat(data.data.tp) +'°C</br></br>'
                 + parseFloat(data.data.to)+'°C</br></br>';
         } else if( type == 'roomdata' ) {
-            sens.style.opacity = 1;
             sens.innerHTML = parseFloat(data.data.t) +'°C</br></br>'
                 +( (data.data.h!='0.00') ? parseFloat(data.data.h)+'%' : '');
         }
+        sens.style.opacity = 1;
     }
 });

@@ -222,6 +222,11 @@ Ext.define('KotelControlPanel', {
         var id = ev.target.id;
 		var butt = id.substring(0,1).toUpperCase();
 		var cmp =Ext.getCmp('kotelControlPanel');
+        if(cmp.stage[cmp.curSatgeInx]=='pr' && butt=='M'){
+            cmp.setDisabled(true);
+            setTimeout( function(cmp) { var cmp =Ext.getCmp('kotelControlPanel'); cmp.setDisabled(false) }, 200);
+            return;
+        }
         var stage = cmp.nextStage(butt);
         var hash = md5((new Date()).toLocaleString());
         var rMsg = '{"action":"resend", "recipient":"'+cmp.kotelId+'", "msg":"'
