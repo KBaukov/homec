@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	writeWait = 10 * time.Second 		// Time allowed to write a message to the peer.
+	writeWait = 3 * time.Second 		// Time allowed to write a message to the peer.
 	maxMessageSize = 8192  				// Maximum message size allowed from peer.
 	pingWait = 60 * time.Second 		// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second 		// Time allowed to read the next pong message from the peer.
+	pongWait = 30 * time.Second 		// Time allowed to read the next pong message from the peer.
 	pingPeriod = (pongWait * 9) / 10	// Send pings to peer with this period. Must be less than pongWait.
 	closeGracePeriod = 10 * time.Second	// Time to wait before force close on connection.
 	brPref = "WBR_"
@@ -26,7 +26,7 @@ const (
 
 func init() {
 	log.Println("### Start Ping Scheduler ###")
-	gocron.Every(1).Minute().Do(pingActiveDevices)
+	gocron.Every(1).Second ().Do(pingActiveDevices)
 	gocron.Start()
 }
 
@@ -34,6 +34,7 @@ func internalError(ws *websocket.Conn, msg string, err error) {
 	log.Println(msg, err)
 	ws.WriteMessage(websocket.TextMessage, []byte("Internal server error."))
 }
+
 
 var (
 	WsConnections     = make(map[string]*websocket.Conn)
@@ -55,6 +56,7 @@ var upgrader = websocket.Upgrader{
 		//}
 		return true
 	},
+
 }
 
 func ServeWs(db db.DbService) http.HandlerFunc {
@@ -77,12 +79,15 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 		}
 		//defer ws.Close() !!!! Important
 
-		ws.SetCloseHandler(wsClose);
+		//ws.SetReadDeadline(time.Now().Add(pongWait))
+		//ws.SetPongHandler(func(string) error { ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
 		WsConnections[deviceId] = ws
 		if(ws != nil) {
-			//ws.SetPingHandler(ping)
-			//ws.SetPongHandler(pong)
+			ws.SetPingHandler(ping)
+			ws.SetPongHandler(pong)
+			//ws.SetReadDeadline(time.Now().Add(pongWait))
+			ws.SetCloseHandler(wsClose)
 			log.Println("Create new Ws Connection: succes, device: ", deviceId)
 			go wsProcessor(ws, db, deviceId)
 		} else {
@@ -93,19 +98,18 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 	}
 }
 
-func wsClose(code int, reason string) error  {
-
-
-	return nil
-}
-
 func ping(appData string) error {
-	log.Println("[WS] Ping: "+appData)
+	//log.Println("# Send ping to "+appData+" succes.     #")
 	return nil
 }
 
 func pong(appData string) error {
-	log.Println("[WS] Pong: "+appData)
+	//log.Println("# Recive pong from "+appData+" succes. #")
+	return nil
+}
+
+func wsClose(code int, reason string) error {
+	log.Println("# Ws connection is closed: "+string(code)+" : "+ reason)
 	return nil
 }
 
@@ -126,14 +130,25 @@ func wsProcessor(c *websocket.Conn, db db.DbService, dId string) {
 			if !sendMsg(c, "{\"action\":\"connect\",\"success\":true}") {
 				break
 			} else {
-				if strings.Contains(msg, "\"assign\":") {
-					assign := msg[30:len(msg)-2]
-					WsAsignConns[devId] = assign
-					log.Println("#### Assign", assign, " to ", devId)
-				}
 				log.Println("{action:connect,success:true}", c)
 			}
 		}
+		if strings.Contains(msg, "\"action\":\"assign\"") {
+			assign := msg[29:len(msg)-2]
+			if WsConnections[assign] != nil {
+				WsAsignConns[devId] = assign
+				log.Println("#### Assign", assign, " to ", devId)
+				if !sendMsg(c, "{\"action\":\"assign\",\"success\":true}") {
+					break
+				}
+			} else {
+				if !sendMsg(c, "{\"action\":\"assign\",\"success\":false}") {
+					break
+				}
+			}
+
+		}
+
 		if strings.Contains(msg, "\"action\":\"resend\"") {
 			var rMsg ent.ResendMessage
 
@@ -301,27 +316,38 @@ func getDevIdByConn(c *websocket.Conn) string {
 
 
 func pingActiveDevices() {
-	log.Println("########## Ping Devices ############")
+	//log.Println("############ Ping Devices #############")
 	for devId, c := range WsConnections {
 		if c != nil {
-			if !sendMsg(c, "{\"action\":\"ping\"}") {
-				log.Println("# Send ping to " + devId + " failed.  #")
+			if err := c.WriteMessage(websocket.PingMessage, []byte(devId)); err != nil {
+				log.Println("# Send ping to " + devId + " failed.     #")
 				deleteWsConn(devId)
 			} else {
-				log.Println("# Send ping to " + devId + " success. #" )
+				//log.Println("# Send ping to " + devId + " success.    #" )
 			}
 		} else {
-			log.Println("# Device " + devId + " is die.        #" )
+			log.Println("# Device " + devId + " is die.           #" )
 			deleteWsConn(devId)
 		}
 
 	}
-	log.Println("####################################")
+	//log.Println("####################################")
 }
 
 func deleteWsConn(dId string) {
+	unassign(dId)
 	WsConnections[dId] = nil
 	delete(WsConnections, dId)
+}
+
+func unassign(dId string) {
+	for key, val := range WsAsignConns {
+		if val == dId {
+			wss := WsConnections[key]
+			sendMsg(wss, "{\"action\":\"unassign\",\"device\":\""+val+"\"}")
+			delete(WsAsignConns, key)
+		}
+	}
 	delete(WsAsignConns, dId)
 }
 

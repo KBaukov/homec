@@ -14,6 +14,8 @@ Ext.define('MapPanel', {
 
         this.wss = [];
 
+        this.assignDevice = '';
+
         this.initForm();
 
         MapPanel.superclass.initComponent.apply(this, arguments);
@@ -37,6 +39,13 @@ Ext.define('MapPanel', {
                 this.resizeImage();
             }
         };
+        this.menu = Ext.create('Ext.menu.Menu', {
+            floating: true, scope: this,
+            items: [
+                { text: 'Reset', handler: this.resetDevice},
+                { text: 'Период обновления', handler: this.setDelay}
+            ]
+        });
     },
     resizeImage: function() {
         var h = this.getHeight();
@@ -160,10 +169,11 @@ Ext.define('MapPanel', {
 
         wss.onopen = function(event) {
             var conn = event.target;
-            var sens = WssConnections.getElByConn(conn);
-            var dd = sens.id.split('_');
-            conn.send('{"action":"connect","assign":"'+devices.getName(dd[2])+'"}');
+            //var sens = WssConnections.getElByConn(conn);
+            //var dd = sens.id.split('_');
+            //conn.send('{"action":"assign","assign":"'+conn.assignDev+'"}');
             console.log("WSS Соединение установлено.");
+            Ext.TaskManager.start(conn.task);
         };
         wss.onerror = function(error) { console.log("Ошибка " + error.message); };
         wss.onclose = function(event) {
@@ -177,12 +187,46 @@ Ext.define('MapPanel', {
             var data = Ext.decode(event.data);
             var conn = event.target;
             var sens = WssConnections.getElByConn(conn);
-            conn.dataRender(data.type, sens, data);
+
+            if(data.action =='assign' && data.success) {
+                Ext.TaskManager.stop(conn.task);
+                //sens.style.opacity = 1;
+            } else if(data.action == 'unassign') {
+                //error_mes('Ошибка', data.msg);
+                Ext.TaskManager.start(conn.task)
+                sens.style.opacity = 0.2;
+            } else if(data.action == 'datasend') {
+                conn.dataRender(data.type, sens, data);
+            }
+
         };
 
         wss.dataRender = this.dataRender;
-        WssConnections.connections.push( {el:el, conn: wss} );
+        wss.assignDev = devices.getName(el.id.split('_')[2]);
+
         el.style.opacity = 0.2;
+        wss.task = { scope: wss,
+            run: function() {
+                this.send('{"action":"assign","assign":"'+this.assignDev+'"}');
+            },
+            interval: 2000
+        };
+        el.menu = this.menu;
+        el.oncontextmenu = function(e, cmp=this, conn=wss) {
+
+            cmp.menu.init = {el: cmp, conn: conn};
+
+            cmp.menu.showAt(e.pageX, e.pageY, false);
+
+            if(event.preventDefault != undefined)
+                event.preventDefault();
+            if(event.stopPropagation != undefined)
+                event.stopPropagation();
+
+            return null;
+        };
+
+        WssConnections.connections.push( {el:el, conn: wss} );
     },
     dataRender: function(type, sens, data) {
         if(type == 'koteldata') {
@@ -193,5 +237,13 @@ Ext.define('MapPanel', {
                 +( (data.data.h!='0.00') ? parseFloat(data.data.h)+'%' : '');
         }
         sens.style.opacity = 1;
+    },
+    resetDevice: function(e,t) {
+        var devId =e.parentMenu.init.el.id.split('_')[2];
+        var devName = devices.getName(devId);
+        e.parentMenu.init.conn.send('{"action":"resend", "recipient":"'+devName+'", "msg":"e3Jlc2V0fQ=="}');
+    },
+    setDelay: function(e,t,m) {
+        alert(e); alert(t);alert(m);
     }
 });

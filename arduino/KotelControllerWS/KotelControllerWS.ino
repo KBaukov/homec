@@ -13,7 +13,7 @@
 
 #ifdef ESP8266
 extern "C" {
-#include "user_interface.h"
+  #include "user_interface.h"
 }
 #endif
 
@@ -29,7 +29,7 @@ const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 //const char* wlan_ssid           = "Home";
 //const char* wlan_password       = "4r3e2w1q";
-const char* ws_host               = "192.168.0.188";
+const char* ws_host               = "192.168.43.175";
 const int   ws_port               = 8085;
 //const char* ws_host             = "alabino.ddns.net";
 //const int   ws_port             = 443;

@@ -25,7 +25,7 @@ Adafruit_SHT31 sht30 = Adafruit_SHT31();
 const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 
-const char* ws_host               = "192.168.0.188";
+const char* ws_host               = "192.168.43.175";
 const int   ws_port               = 8085;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
 
