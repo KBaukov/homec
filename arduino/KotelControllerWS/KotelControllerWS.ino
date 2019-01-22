@@ -387,8 +387,5 @@ void presKey(String butt) {
 
 void resetDevice() {
   Serial.println("Reset...");
-  //digitalWrite(RSTPIN, LOW);
-  //delay(1000);
- parseDestData("{sadasd:asdas}");
-  //Serial.println(ff);
+  parseDestData("{sadasd:asdas}");
 }

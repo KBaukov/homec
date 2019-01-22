@@ -1,6 +1,3 @@
-#include <Arduino.h>
-#include <Hash.h>
-#include <ESP8266WiFi.h>
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 #include <Wire.h>
@@ -117,8 +114,8 @@ void loop() {
     count = 0;
   }
 
-  Serial.print("%; statusId="); Serial.print(statusId);
-  Serial.print("; count="); Serial.println(count);
+  //Serial.print("%; statusId="); Serial.print(statusId);
+  //Serial.print("; count="); Serial.println(count);
 /*  
    if(USE_SERIAL.available()>0) {
     String msg = "";
@@ -130,7 +127,7 @@ void loop() {
 */    
    count++;
    webSocket.loop();
-   Serial.println("====================================================");
+   //Serial.println("====================================================");
    delay(100);
 }
 
@@ -159,23 +156,23 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
             }
             break;
         case WStype_TEXT: {
-
                 String text = (char*) payload;
-                USE_SERIAL.printf("[WSc] get text: %s\n", payload);
-
-                if (text.indexOf("action:connect")>-1) {
-
-                    USE_SERIAL.println("[WSc] Connected to server successful");
-                    delay(1000);
-                    
+                Serial.printf("[WSc] reciv message: %s\n", payload);
+        
+                if (text.indexOf("action:connect") > -1) {
+                  Serial.println("[WSc] Connected to server successful");   
                 } else if(text.indexOf("setDestination")>-1) {
                   
                 } else if(text.indexOf("pessButton")>-1) {
                     
-                } else if(text.indexOf("setDelay")>-1) {
+                } else if (text.indexOf("setDelay") > -1) {
+                  String d = parseData(text, "delay");
+                  wait = d.toInt();
+                  Serial.print("Change wait to: ");
+                  Serial.println(wait);
                   
-                } else if(text.indexOf("reset")>-1) {
-                  
+                } else if (text.indexOf("reset") > -1) {
+                  resetDevice();
                 }
 
                 break;
@@ -191,89 +188,34 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 
 }
 
-void parseData(String json) {
-  StaticJsonBuffer<100> jsonBuffer;
+String parseData(String json, String key) {
+  StaticJsonBuffer<500> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
   if (!root.success()) {
     Serial.println("parseObject() failed");
-    return;
+    return "";
   }
-  bool succ = root["success"];
-  Serial.println("====================================");
-  Serial.println(succ);
-  Serial.println("====================================");
+  return root[key];
 }
 
 void parseDestData(String json) {
-  StaticJsonBuffer<300> jsonBuffer;
+
+  StaticJsonBuffer<400> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
   if (!root.success()) {
     Serial.println("parseObject() failed");
+    Serial.println("#### " + json);
     return;
   }
-  bool succ = root["success"];
-  Serial.println("====================================");
-  Serial.println(succ);
-  Serial.println("====================================");
+  float destTp = atof(root["destTp"]);
+  float destTo = atof(root["destTo"]); 
+  float destTc = atof(root["destTc"]); 
+  float destPr = atof(root["destPr"]);
+  int destKw = atoi(root["destKw"]);
+  String stage = root["stage"];
 }
 
-void parseDeviceData(String json) {
-  Serial.println("Parse Device Data:");
-  StaticJsonBuffer<600> jsonBuffer;
-  JsonObject& root = jsonBuffer.parseObject(json);
-  if (!root.success()) {
-    Serial.println("parseObject() failed");
-    return;
-  }
-  bool succ = root["success"];
-  int n = root["data"].size();
-  Serial.print("Count devices: "); Serial.println(n);
-  for(int i=0; i<n; i++) {
-    String ip = root["data"][i]["ip"];
-    String type = root["data"][i]["type"];
-    Serial.print("Type: "); Serial.print(type);
-    Serial.print("; Ip: "); Serial.println(ip);
-    //devIp[i] = ip; devType[i] = type;    
-  }
-
+void resetDevice() {
+  Serial.println("Reset...");
+  parseDestData("{sadasd:asdas}");
 }
-
-char parseButtData(String json) {
-  char cc[2];
-  //Serial.println("Parse Button Data:");
-  StaticJsonBuffer<100> jsonBuffer;
-  JsonObject& root = jsonBuffer.parseObject(json);
-  if (!root.success()) {
-    Serial.println("parseObject() failed");
-    return 0;
-  }
-  String butt = root["butt"];
-  butt.toCharArray(cc, 2);
-  return cc[0];
-}
-
-/*
-float ttRead(OneWire ds) {
-  float temperature;
-  ds.reset();  // сброс шины
-  ds.write(0xCC, POWER_MODE); // пропуск ROM
-  ds.write(0x44, POWER_MODE); // инициализация измерения
-  delay(900);  // пауза 0,9 сек
-  ds.reset();  // сброс шины
-  ds.write(0xCC, POWER_MODE); // пропуск ROM  
-  ds.write(0xBE, POWER_MODE); // команда чтения памяти датчика  
-  ds.read_bytes(bufData, 9);  // чтение памяти датчика, 9 байтов
-
-  if ( OneWire::crc8(bufData, 8) == bufData[8] ) {  // проверка CRC
-    // данные правильные
-    temperature=  (float)((int)bufData[0] | (((int)bufData[1]) << 8)) * 0.0625 + 0.03125; 
-  
-    //return String(temperature)+" C";    
-  } else {  
-    // ошибка CRC, отображается ----
-    USE_SERIAL.println("Error");         
-  }    
-
-  return temperature;
-}
-*/
