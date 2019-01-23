@@ -1,6 +1,8 @@
 package ent
 
 import (
+	"github.com/gorilla/websocket"
+	"sync"
 	"time"
 )
 
@@ -98,3 +100,9 @@ type ResendMessage struct {
 	MESSAGE   	string `json:"msg"`
 }
 
+type WssConnect struct {
+	Mu			sync.Mutex
+	DeviceId	string
+	Connection	*websocket.Conn
+	RelationWs	string
+}

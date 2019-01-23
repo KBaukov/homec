@@ -33,7 +33,6 @@ Ext.define('MapPanel', {
         this.listeners = { scope: this,
             render: function() {
                 this.getSensorsData();
-                //Ext.TaskManager.start(this.task);
             },
             resize: function() {
                 this.resizeImage();
@@ -230,11 +229,11 @@ Ext.define('MapPanel', {
     },
     dataRender: function(type, sens, data) {
         if(type == 'koteldata') {
-            sens.innerHTML = parseFloat(data.data.tp) +'°C</br></br>'
-                + parseFloat(data.data.to)+'°C</br></br>';
+            sens.innerHTML = parseFloat(data.data.tp).toFixed(2) +'°C</br></br>'
+                + parseFloat(data.data.to).toFixed(2)+'°C</br></br>';
         } else if( type == 'roomdata' ) {
-            sens.innerHTML = parseFloat(data.data.t) +'°C</br></br>'
-                +( (data.data.h!='0.00') ? parseFloat(data.data.h)+'%' : '');
+            sens.innerHTML = parseFloat(data.data.t).toFixed(2) +'°C</br></br>'
+                +( (data.data.h!='0.00') ? parseFloat(data.data.h).toFixed(2)+'%' : '');
         }
         sens.style.opacity = 1;
     },
@@ -243,7 +242,11 @@ Ext.define('MapPanel', {
         var devName = devices.getName(devId);
         e.parentMenu.init.conn.send('{"action":"resend", "recipient":"'+devName+'", "msg":"e3Jlc2V0fQ=="}');
     },
-    setDelay: function(e,t,m) {
-        alert(e); alert(t);alert(m);
+    setDelay: function(e,t) {
+        var devId =e.parentMenu.init.el.id.split('_')[2];
+        var devName = devices.getName(devId);
+        var conn = e.parentMenu.init.conn;
+        this.delayWin = Ext.create('KotelDelayWin', {papa: this, devName: devName, wss: conn});
+        this.delayWin.openWin();
     }
 });

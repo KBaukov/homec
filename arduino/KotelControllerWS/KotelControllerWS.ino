@@ -119,8 +119,8 @@ void loop() {
 
   if (statusId == 1 && count >= wait ) {
     Serial.println("======================================================================================");
-    tp = ttRead(ds1);//+2;
-    to = ttRead(ds2);
+    tp = random(100, 800) / 10.0; //ttRead(ds1);//+2;
+    to = random(100, 800) / 10.0; //ttRead(ds2);
     kw = 11; //
     pr = 2.34; //
     Serial.print("tp="); Serial.print(tp); Serial.print("  ");

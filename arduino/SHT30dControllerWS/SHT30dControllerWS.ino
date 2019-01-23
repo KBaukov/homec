@@ -94,7 +94,8 @@ void loop() {
   if(statusId == 1 && count >= wait ) {
     //temp = sht30.readTemperature(); 
     //hum  = sht30.readHumidity();
-    temp = 22.35; hum = 54.56;
+    temp = random(100,800) / 10; //22.35; 
+    hum = random(100,800) / 10;  //54.56;
     if (isnan(hum) || isnan(temp)) {    
       Serial.println("SHT Error!");
     } else {

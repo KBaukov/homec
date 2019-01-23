@@ -427,7 +427,7 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			if err != nil || kotelName == "" {
 				err = errors.New("Котел не найден")
 			}
-			ws := WsConnections[kotelName]
+			ws := WsConnections[kotelName].Connection
 			if ws == nil {
 				err = errors.New("Сессия не активна")
 			} else {
@@ -472,7 +472,7 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			butt := r.PostFormValue("button")
 			//stage := r.PostFormValue("stage")
 
-			ws := WsConnections[kotelName]
+			ws := WsConnections[kotelName].Connection
 			if ws == nil {
 				err = errors.New("Сессия не активна")
 			} else {
@@ -511,7 +511,7 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 					err = errors.New("Котел не найден")
 				}
 				user := r.PostFormValue("user")
-				ws := WsConnections[kotelName]
+				ws := WsConnections[kotelName].Connection
 				if ws == nil {
 					err = errors.New("Сессия не активна")
 				} else {
@@ -537,7 +537,7 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			if err != nil || kotelName == "" {
 				err = errors.New("Котел не найден")
 			}
-			ws := WsConnections[kotelName]
+			ws := WsConnections[kotelName].Connection
 			if ws == nil {
 				err = errors.New("Сессия не активна")
 			} else {
