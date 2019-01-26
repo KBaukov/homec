@@ -38,7 +38,7 @@ func init() {
 
 
 var (
-	//WsConnections     = make(map[string]*websocket.Conn)
+	Mu					sync.Mutex
 	WsAsignConns	  = make(map[string]string)
 	WsConnections	  = make(map[string] ent.WssConnect)
 	//configurationPath = flag.String("config", "config.json", "Путь к файлу конфигурации")
@@ -83,11 +83,13 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 		}
 
 		wsc := ent.WssConnect{mu, deviceId, ws,""}
+		Mu.Lock()
 		WsConnections[deviceId] = wsc
+		Mu.Unlock()
 
 		if(ws != nil) {
-			ws.SetPingHandler(ping)
-			ws.SetPongHandler(pong)
+			//ws.SetPingHandler(ping)
+			//ws.SetPongHandler(pong)
 			//ws.SetReadDeadline(time.Now().Add(pongWait))
 			ws.SetCloseHandler(wsClose)
 			log.Println("Create new Ws Connection: succes, device: ", deviceId)
@@ -100,7 +102,7 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 	}
 }
 
-func ping(appData string) error {
+/*func ping(appData string) error {
 	//log.Println("# Send ping to "+appData+" succes.     #")
 	return nil
 }
@@ -108,7 +110,7 @@ func ping(appData string) error {
 func pong(appData string) error {
 	//log.Println("# Recive pong from "+appData+" succes. #")
 	return nil
-}
+}*/
 
 func wsClose(code int, reason string) error {
 	log.Println("# Ws connection is closed: "+string(code)+" : "+ reason)
@@ -121,32 +123,41 @@ func wsProcessor(wsc *ent.WssConnect, db db.DbService) {
 	defer wsc.Connection.Close()
 
 	for {
-
+		Mu.Lock()
 		msg, err := WsRead(wsc);
+		Mu.Unlock()
 		if  err != nil {
 			break
 		}
 
 		if strings.Contains(msg, "\"action\":\"connect\"") {
+			Mu.Lock()
 			if !sendMsg(wsc, "{\"action\":\"connect\",\"success\":true}") {
+				Mu.Unlock()
 				break
 			} else {
 				log.Println("{action:connect,success:true}") //, conn)
 			}
+			Mu.Unlock()
 		}
 		if strings.Contains(msg, "\"action\":\"assign\"") {
 			assign := msg[29:len(msg)-2]
+			Mu.Lock()
 			if WsConnections[assign].Connection != nil {
 				WsAsignConns[devId] = assign
 				log.Println("#### Assign", assign, " to ", devId)
 				if !sendMsg(wsc, "{\"action\":\"assign\",\"success\":true}") {
+					Mu.Unlock()
 					break
 				}
+
 			} else {
 				if !sendMsg(wsc, "{\"action\":\"assign\",\"success\":false}") {
+					Mu.Unlock()
 					break
 				}
 			}
+			Mu.Unlock()
 
 		}
 
@@ -164,7 +175,9 @@ func wsProcessor(wsc *ent.WssConnect, db db.DbService) {
 			message, _ := base64.URLEncoding.DecodeString(rMsg.MESSAGE)
 			mm := strings.Replace(string(message),"\"sender\":\"\"", "\"sender\":\""+sender+"\"", 1)
 			log.Println("[WS]:resend message: ",  mm, " to: ",  rMsg.RECIPIENT)
+			Mu.Lock()
 			sendMsg(&rConn, mm)
+			Mu.Unlock()
 		}
 
 		if strings.Contains(msg, "\"action\":\"datasend\"") {
@@ -188,8 +201,9 @@ func wsProcessor(wsc *ent.WssConnect, db db.DbService) {
 				if err != nil {
 					log.Println("Error data unmarshaling: ", err)
 				}
-
+				Mu.Lock()
 				if !sendMsg(wsc, "{action:datasend,success:true}") {
+					Mu.Unlock()
 					break
 				} else {
 
@@ -205,7 +219,7 @@ func wsProcessor(wsc *ent.WssConnect, db db.DbService) {
 					sendDataToWeb(msg, devId);
 
 				}
-
+				Mu.Unlock()
 			}
 
 			if strings.Contains(msg, "\"type\":\"roomdata\"") {
@@ -229,8 +243,9 @@ func wsProcessor(wsc *ent.WssConnect, db db.DbService) {
 				}
 
 				data.DATE = time.Now();
-
+				Mu.Lock()
 				if !sendMsg(wsc, "{action:datasend,success:true}") {
+					Mu.Unlock()
 					break
 				} else {
 					success, err := db.AddRoomData(data)
@@ -240,7 +255,7 @@ func wsProcessor(wsc *ent.WssConnect, db db.DbService) {
 				}
 
 				sendDataToWeb(msg, wsc.DeviceId);
-
+				Mu.Unlock()
 			}
 		}
 		if strings.Contains(msg, "\"action\":\"pessButton\"") {
@@ -277,9 +292,12 @@ func wsProcessor(wsc *ent.WssConnect, db db.DbService) {
 				sData := string(kData)
 				msg := "{\"action\":\"setLastValues\"," + sData[1:len(sData)]
 				log.Println("Last Data is: ", msg)
+				Mu.Lock()
 				if !sendMsg(wsc, msg) {
+					Mu.Unlock()
 					break
 				}
+				Mu.Unlock()
 			}
 			if strings.Contains(msg, "\"type\":\"roomdata\"") {
 
