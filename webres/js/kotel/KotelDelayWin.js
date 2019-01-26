@@ -29,7 +29,7 @@ Ext.define('KotelDelayWin', {
         var spiner = Ext.create('Ext.form.field.Spinner',  {
             name: 'delay',
             fieldLabel: 'Период:',
-            value: 994,
+            value: 10,
             step: 1,
             onSpinUp: function() {
                 var me = this;
@@ -64,7 +64,7 @@ Ext.define('KotelDelayWin', {
     },
     closeWin: function(ev) {
         var values = this.form.getValues();
-        var rMsg = '{"action":"setDelay","dalay":'+values.delay+'}';
+        var rMsg = '{"action":"setDelay","delay":"'+values.delay+'"}';
 
         this.wss.send('{"action":"resend", "recipient":"'+this.devName+'", "msg":"'+btoa(rMsg)+'"}');
         this.close();

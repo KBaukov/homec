@@ -208,7 +208,7 @@ Ext.define('MapPanel', {
             run: function() {
                 this.send('{"action":"assign","assign":"'+this.assignDev+'"}');
             },
-            interval: 2000
+            interval: 500
         };
         el.menu = this.menu;
         el.oncontextmenu = function(e, cmp=this, conn=wss) {

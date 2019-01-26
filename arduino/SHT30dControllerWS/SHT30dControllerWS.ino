@@ -25,7 +25,7 @@ Adafruit_SHT31 sht30 = Adafruit_SHT31();
 const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 
-const char* ws_host               = "192.168.43.175";
+const char* ws_host               = "192.168.0.188";
 const int   ws_port               = 8085;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
 
@@ -42,9 +42,9 @@ byte bufData[9];  // буфер данных
 float temp = 0;
 float hum  = 0;
 
-long wait = 595;
-long count = 560;
-long pressDuration = 100;
+long wait = 810;
+int period = 10;
+long count = 800;
 int statusId = 0;
 
 
@@ -81,8 +81,12 @@ void setup() {
 }
 
 void loop() {
-
-  
+  webSocket.loop();
+  if (statusId == 0 ) {
+    Serial.print(".");
+    //Serial.print(statusId);
+    delay(100);
+  }
 /*
   temp = 25.55; hum = 35.55;
   Serial.print("Temp="); Serial.print(temp);
@@ -92,10 +96,10 @@ void loop() {
 */
   
   if(statusId == 1 && count >= wait ) {
-    //temp = sht30.readTemperature(); 
-    //hum  = sht30.readHumidity();
-    temp = random(100,800) / 10; //22.35; 
-    hum = random(100,800) / 10;  //54.56;
+    temp = sht30.readTemperature(); 
+    hum  = sht30.readHumidity();
+    //temp = random(100,800) / 10; //22.35; 
+    //hum = random(100,800) / 10;  //54.56;
     if (isnan(hum) || isnan(temp)) {    
       Serial.println("SHT Error!");
     } else {
@@ -113,23 +117,12 @@ void loop() {
     sendMessage(msg);
 
     count = 0;
+  } else {
+    count++;
   }
 
-  //Serial.print("%; statusId="); Serial.print(statusId);
-  //Serial.print("; count="); Serial.println(count);
-/*  
-   if(USE_SERIAL.available()>0) {
-    String msg = "";
-     while (USE_SERIAL.available() > 0) {
-       msg += (char) USE_SERIAL.read();
-     }
-     sendMessage(msg);
-   }
-*/    
-   count++;
-   webSocket.loop();
    //Serial.println("====================================================");
-   delay(100);
+   delay(10);
 }
 
 // FUNCTIONS
@@ -142,7 +135,7 @@ void sendMessage(String & msg) {
 }
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
-    USE_SERIAL.print("EventType:"); USE_SERIAL.println(type);
+   // USE_SERIAL.print("EventType:"); USE_SERIAL.println(type);
     
     switch (type) {
         case WStype_DISCONNECTED:
@@ -168,9 +161,9 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
                     
                 } else if (text.indexOf("setDelay") > -1) {
                   String d = parseData(text, "delay");
-                  wait = d.toInt();
-                  Serial.print("Change wait to: ");
-                  Serial.println(wait);
+                  period = d.toInt();
+                  wait = round(99.4*period);
+                  Serial.println("Change period to: "+d);
                   
                 } else if (text.indexOf("reset") > -1) {
                   resetDevice();

@@ -5,11 +5,11 @@
 
 
 #define POWER_MODE  0
-#define LEFT_BUTT  D5
-#define RIGT_BUTT  D6
-#define MODE_BUTT  D7
-#define EXTC_BUTT  D1
-#define RSTPIN D3
+#define LEFT_BUTT  2 //D5
+#define RIGT_BUTT  0 //D6
+#define MODE_BUTT  2 //D7
+#define EXTC_BUTT  0 //D1
+#define RSTPIN 2 //D3
 
 #ifdef ESP8266
 extern "C" {
@@ -18,8 +18,8 @@ extern "C" {
 #endif
 
 // SETTINGS
-OneWire  ds1(D2);  // on pin D4 (a 4.7K resistor is necessary)
-OneWire  ds2(D2);  // on pin D3 (a 4.7K resistor is necessary)
+OneWire  ds1(0);  // on pin D4 (a 4.7K resistor is necessary)
+OneWire  ds2(2);  // on pin D3 (a 4.7K resistor is necessary)
 //File hcFile;
 WebSocketsClient webSocket;
 rBase64generic<250> encoder;
@@ -44,7 +44,6 @@ String fingerPrint = "0597dedb78f5fae3850839a03e7ddf1cf8cf9350";
 
 // VARIABLES
 byte bufData[9];  // буфер данных
-int led_pin = 2;
 
 float tp = 0;
 float to = 0;
@@ -58,14 +57,11 @@ int destKw = 0;
 String currentStage = "0_0";
 
 String ctrlComm = "";
-long wait = 810; // 81.0 - 1 sec
-float k = 81.0;
+long wait = 994;
 //long wait = 6000;
 long count = 0;
 long pressDuration = 100;
 int statusId = 0;
-
-int period = 10;
 
 bool isSessionStart = false;
 
@@ -109,43 +105,25 @@ void setup() {
   webSocket.onEvent(webSocketEvent);
 
   Serial.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-  webSocket.loop();
-  delay(500);
-  webSocket.loop();
   delay(1000);
-
-  Serial.print("Connected to server: ");
 }
 
 void loop() {
-  //long b = micros();
+
   webSocket.loop();
-  
-  if (statusId == 0 ) {
-    Serial.print(".");
-    //Serial.print(statusId);
-    delay(100);
-  }
-  
-  
-  
   //Serial.print("statusId=");
   //Serial.print(statusId);
   //Serial.print(";  count=");
   //Serial.println(count);
 
   if (statusId == 1 && count >= wait ) {
-    
-    
-    //Serial.println("======================================================================================");
-    //tp = random(100, 800) / 10.0; 
-    tp = ttRead(ds1);//+2;
-    //to = random(100, 800) / 10.0; 
-    to = ttRead(ds2);
+    Serial.println("======================================================================================");
+    tp = random(100, 800) / 10.0; //ttRead(ds1);//+2;
+    to = random(100, 800) / 10.0; //ttRead(ds2);
     kw = 11; //
     pr = 2.34; //
-    //Serial.print("tp="); Serial.print(tp); Serial.print("  ");
-    //Serial.print("to="); Serial.println(to);
+    Serial.print("tp="); Serial.print(tp); Serial.print("  ");
+    Serial.print("to="); Serial.println(to);
 
     String msg = "{\"action\":\"datasend\", \"type\":\"koteldata\", \"data\":{ \"deviceId\":\"" + deviceId + "\", "
                  + "\"to\":" + to + ", "
@@ -156,7 +134,7 @@ void loop() {
                  + " } }";
 
     sendMessage(msg);
-    //waitT(b);
+
     count = 0;
   } else {
     count++;
@@ -170,16 +148,8 @@ void loop() {
     //Serial.println("Relay is off");
   }*/
 
-  delay(10);
+  delay(100);
 }
-
-/*void waitT(long bb) {
-  long e = micros();
-
-  long ww = round(period * 1000 - (e - bb)/1000);
-  
-  delay(ww);
-}*/
 
 void sendMessage(String & msg) {
   webSocket.sendTXT(msg.c_str(), msg.length());
@@ -254,10 +224,9 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
           sendMessage(ansver);          
         } else if (text.indexOf("setDelay") > -1) {
           String d = parseData(text, "delay");
-          period = d.toInt();
-          wait = round(k*period);
-          Serial.println("Change period to: "+d);
-          //Serial.println(d);
+          wait = d.toInt();
+          Serial.print("Change wait to: ");
+          Serial.println(wait);
           
         } else if (text.indexOf("reset") > -1) {
           resetDevice();
@@ -276,30 +245,6 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 
 }
 
-
-
-/*String readKotelData() {
-  String content = ""; int i = 0;
-  hcFile = SD.open("kotel.dat");
-  int sz = hcFile.size();
-  if (hcFile) {
-    byte b[sz];
-    Serial.println("kotel.dat:");
-    while (hcFile.available()) {
-      b[i++] =  hcFile.read();
-    }
-    content = String((char*) b).substring(0, sz);
-  } else {
-    Serial.println("Error while reading kotel.data file");
-  }
-  hcFile.close();
-  Serial.print("Size: ");
-  Serial.println(i);
-  Serial.println("Content: " + content);
-  return content;
-}*/
-
-
 void parseDestData(String json) {
 
   StaticJsonBuffer<400> jsonBuffer;
@@ -317,28 +262,6 @@ void parseDestData(String json) {
   destPr = atof(root["destPr"]);
   destKw = atoi(root["destKw"]);
   String stage = root["stage"]; currentStage = stage;
-
-  /*if (SD.exists("kotel.dat")) {
-    //Serial.println("kotel.dat exists.");
-    SD.remove("kotel.dat");
-    hcFile = SD.open("kotel.dat", FILE_WRITE);
-    if (hcFile) {
-      String cont = "{destTo:" + dTo + ",destTp:" + dTp + ",destKw:" + dKw + ",destPr:" + dPr + ",destTc:" + dTc + ",stage:\"" + stage + "\"}";
-      Serial.print("Writing to kotel.dat: " + cont);
-      hcFile.println(cont);
-      // close the file:
-      hcFile.close();
-      Serial.println("done.");
-    } else {
-      // if the file didn't open, print an error:
-      Serial.println("error opening kotel.dat");
-    }
-  } else {
-    Serial.println("kotel.dat doesn't exist.");
-  }*/
-
-
-
 }
 
 String parseData(String json, String key) {
@@ -368,7 +291,7 @@ float ttRead(OneWire ds) {
 
     //return String(temperature)+" C";
   } else {
-    //temperature = random(0, 800) / 10.0;
+    temperature = random(0, 800) / 10.0;
     // ошибка CRC, отображается ----
     Serial.println("Error while get temp.");
   }

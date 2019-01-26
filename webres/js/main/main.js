@@ -54,5 +54,5 @@ Ext.onReady(function(){
         //console.log('--- ' + slCounter);
   };
   slCounter = false;
-  screenLockT=setTimeout(screenLock, 30000000);
+  screenLockT=setTimeout(screenLock, 300000000);
 });
