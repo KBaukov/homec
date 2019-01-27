@@ -28,7 +28,7 @@ const (
 func init() {
 	//log.Println("### Start Ping Scheduler ###")
 	gocron.Every(1).Second ().Do(pingActiveDevices)
-	//gocron.Start()
+	gocron.Start()
 }
 
 //func internalError(ws *websocket.Conn, msg string, err error) {
