@@ -3,7 +3,6 @@ package handle
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/jasonlvhit/gocron"
 	"github.com/KBaukov/homec/db"
 	"github.com/KBaukov/homec/ent"
 	"log"
@@ -27,8 +26,8 @@ const (
 
 func init() {
 	//log.Println("### Start Ping Scheduler ###")
-	gocron.Every(1).Minute().Do(pingActiveDevices)
-	gocron.Start()
+	//gocron.Every(1).Minute().Do(pingActiveDevices)
+	//gocron.Start()
 }
 
 //func internalError(ws *websocket.Conn, msg string, err error) {
