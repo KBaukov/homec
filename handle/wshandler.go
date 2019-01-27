@@ -27,7 +27,7 @@ const (
 
 func init() {
 	//log.Println("### Start Ping Scheduler ###")
-	gocron.Every(10).Second ().Do(pingActiveDevices)
+	gocron.Every(1).Minute().Do(pingActiveDevices)
 	gocron.Start()
 }
 
