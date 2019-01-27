@@ -38,7 +38,7 @@ func init() {
 
 
 var (
-	//WsConnections     = make(map[string]*websocket.Conn)
+	Mu	sync.Mutex
 	WsAsignConns	  = make(map[string]string)
 	WsConnections	  = make(map[string] ent.WssConnect)
 	//configurationPath = flag.String("config", "config.json", "Путь к файлу конфигурации")
@@ -83,8 +83,9 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 		}
 
 		wsc := ent.WssConnect{mu, deviceId, ws,""}
+		Mu.Lock()
 		WsConnections[deviceId] = wsc
-
+		Mu.Unlock()
 		if(ws != nil) {
 			ws.SetPingHandler(ping)
 			ws.SetPongHandler(pong)
@@ -383,7 +384,9 @@ func pingDevice(wsc *ent.WssConnect, devId string) (bool,error) {
 func deleteWsConn(dId string) {
 	unassign(dId)
 	//WsConnections[dId] = nil
+	Mu.Lock()
 	delete(WsConnections, dId)
+	Mu.Unlock()
 }
 
 func unassign(dId string) {
@@ -391,10 +394,14 @@ func unassign(dId string) {
 		if val == dId {
 			wss := WsConnections[key]
 			sendMsg(&wss, "{\"action\":\"unassign\",\"device\":\""+val+"\"}")
+			Mu.Lock()
 			delete(WsAsignConns, key)
+			Mu.Unlock()
 		}
 	}
+	Mu.Lock()
 	delete(WsAsignConns, dId)
+	Mu.Unlock()
 }
 
 func sendDataToWeb(msg string, sender string) {
