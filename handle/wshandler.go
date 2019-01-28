@@ -3,6 +3,7 @@ package handle
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"github.com/jasonlvhit/gocron"
 	"github.com/KBaukov/homec/db"
 	"github.com/KBaukov/homec/ent"
@@ -302,14 +303,23 @@ func WsRead(wsc *ent.WssConnect) (string, error) {
 	wsc.Mu.Lock()
 	defer wsc.Mu.Unlock()
 
-	mt, message, err := wsc.Connection.ReadMessage()
-	if err != nil {
-		log.Println("[WS]:error:  ", err)
-		return "", err
-	}
-	log.Printf("[WS]:recive: %s, type: %d", message, mt)
+	if wsc.Connection != nil {
+		mt, message, err := wsc.Connection.ReadMessage()
+		if err != nil {
+			log.Println("[WS]:error:  ", err)
+			return "", err
+		}
+		log.Printf("[WS]:recive: %s, type: %d", message, mt)
+		return string(message), nil
 
-	return string(message), nil
+	}  else {
+		deleteWsConn(wsc.DeviceId)
+		log.Println("[WS]:read from " + wsc.DeviceId + " failed")
+		log.Println("[WS]:Connection lost: device - " + wsc.DeviceId)
+		return "", errors.New("[WS]:read from " + wsc.DeviceId + " failed: connection lost")
+	}
+
+
 }
 
 
@@ -317,14 +327,23 @@ func sendMsg(wsc *ent.WssConnect, msg string) bool {
 	wsc.Mu.Lock()
 	defer wsc.Mu.Unlock();
 
-	err := wsc.Connection.WriteMessage(websocket.TextMessage, []byte(msg))
-	if err != nil {
-		log.Println("[WS]:send:", err)
+	if wsc.Connection != nil {
+		err := wsc.Connection.WriteMessage(websocket.TextMessage, []byte(msg))
+		if err != nil {
+			log.Println("[WS]:send:", err)
+			return false
+		}
+		//devId := getDevIdByConn(c)
+		log.Println("[WS]:send to " + wsc.DeviceId + " success: "+msg)
+		return true
+	} else {
+		deleteWsConn(wsc.DeviceId)
+		log.Println("[WS]:send to " + wsc.DeviceId + " failed: "+msg)
+		log.Println("[WS]:Connection lost: device - " + wsc.DeviceId)
 		return false
 	}
-	//devId := getDevIdByConn(c)
-	log.Println("[WS]:send to " + wsc.DeviceId + " success: "+msg)
-	return true
+
+
 }
 
 func getDevIdByConn(c *websocket.Conn) string {
