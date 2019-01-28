@@ -29,7 +29,7 @@ const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 //const char* wlan_ssid           = "Home";
 //const char* wlan_password       = "4r3e2w1q";
-const char* ws_host               = "192.168.0.188";
+const char* ws_host               = "192.168.43.175";
 const int   ws_port               = 8085;
 //const char* ws_host             = "alabino.ddns.net";
 //const int   ws_port             = 443;
@@ -58,8 +58,8 @@ int destKw = 0;
 String currentStage = "0_0";
 
 String ctrlComm = "";
-long wait = 810; // 81.0 - 1 sec
-float k = 81.0;
+long wait = 994; // 81.0 - 1 sec
+float k = 99.4;
 //long wait = 6000;
 long count = 0;
 long pressDuration = 100;
@@ -138,10 +138,10 @@ void loop() {
     
     
     //Serial.println("======================================================================================");
-    //tp = random(100, 800) / 10.0; 
-    tp = ttRead(ds1);//+2;
-    //to = random(100, 800) / 10.0; 
-    to = ttRead(ds2);
+    tp = random(100, 800) / 10.0; 
+    //tp = ttRead(ds1);//+2;
+    to = random(100, 800) / 10.0; 
+    //to = ttRead(ds2);
     kw = 11; //
     pr = 2.34; //
     //Serial.print("tp="); Serial.print(tp); Serial.print("  ");

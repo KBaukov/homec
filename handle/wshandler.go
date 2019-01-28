@@ -29,7 +29,7 @@ const (
 func init() {
 	//log.Println("### Start Ping Scheduler ###")
 	gocron.Every(1).Second ().Do(pingActiveDevices)
-	//gocron.Start()
+	gocron.Start()
 }
 
 //func internalError(ws *websocket.Conn, msg string, err error) {
@@ -307,6 +307,14 @@ func WsRead(wsc *ent.WssConnect) (string, error) {
 		mt, message, err := wsc.Connection.ReadMessage()
 		if err != nil {
 			log.Println("[WS]:error:  ", err)
+			e := wsc.Connection.Close()
+			if e!=nil {
+				log.Println("[WS]:close connecton error:", err)
+			} else {
+				log.Println("[WS]:connection close...")
+			}
+			wsc.Connection =nil;
+			deleteWsConn(wsc.DeviceId)
 			return "", err
 		}
 		log.Printf("[WS]:recive: %s, type: %d", message, mt)
@@ -330,10 +338,18 @@ func sendMsg(wsc *ent.WssConnect, msg string) bool {
 	if wsc.Connection != nil {
 		err := wsc.Connection.WriteMessage(websocket.TextMessage, []byte(msg))
 		if err != nil {
-			log.Println("[WS]:send:", err)
+			log.Println("[WS]:send error:", err)
+			e := wsc.Connection.Close()
+			if e!=nil {
+				log.Println("[WS]:close connecton error:", err)
+			} else {
+				log.Println("[WS]:connection close...")
+
+			}
+			wsc.Connection =nil;
+			deleteWsConn(wsc.DeviceId)
 			return false
 		}
-		//devId := getDevIdByConn(c)
 		log.Println("[WS]:send to " + wsc.DeviceId + " success: "+msg)
 		return true
 	} else {
@@ -408,6 +424,7 @@ func deleteWsConn(dId string) {
 	Mu.Lock()
 	delete(WsConnections, dId)
 	Mu.Unlock()
+	log.Println("Delete connection #####################################################" )
 }
 
 func unassign(dId string) {
@@ -423,6 +440,7 @@ func unassign(dId string) {
 	Mu.Lock()
 	delete(WsAsignConns, dId)
 	Mu.Unlock()
+	log.Println("Unassign connection #####################################################" )
 }
 
 func sendDataToWeb(msg string, sender string) {
@@ -431,12 +449,12 @@ func sendDataToWeb(msg string, sender string) {
 			deleteWsConn(devId);
 			break;
 		}
-		assDev := wsc.DeviceId//getDevIdByConn(c.Connection)
+		assDev := wsc.DeviceId
 		assRcp := WsAsignConns[assDev]
 		if strings.Contains(devId, brPref) && sender==assRcp {
 			if !sendMsg(&wsc, msg) {
 				log.Println("# Send data to " + devId + " failed.  #")
-				//deleteWsConn(devId)
+				deleteWsConn(devId)
 			} else {
 				log.Println("# Send data to " + devId + " success. #" )
 			}
