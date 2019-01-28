@@ -138,7 +138,9 @@ func wsProcessor(wsc *ent.WssConnect, db db.DbService) {
 		if strings.Contains(msg, "\"action\":\"assign\"") {
 			assign := msg[29:len(msg)-2]
 			if WsConnections[assign].Connection != nil {
+				Mu.Lock()
 				WsAsignConns[devId] = assign
+				Mu.Unlock()
 				log.Println("#### Assign", assign, " to ", devId)
 				if !sendMsg(wsc, "{\"action\":\"assign\",\"success\":true}") {
 					break

@@ -5,11 +5,13 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/KBaukov/homec/ent"
 	"log"
+	"sync"
 	"time"
 )
 
 
 var (
+	Mu	sync.Mutex
 	RoomData     = make(map[string]ent.SensorsData)
 )
 const (
@@ -642,15 +644,17 @@ func (db Database) AddRoomData(data ent.SensorsData) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
+	Mu.Lock()
 	RoomData[data.DEVICE_ID] = data
-
+	Mu.Unlock()
 	return true, err
 }
 
 func (db Database) GetRoomData(devId string) (ent.SensorsData, error) {
 	var err error
+	Mu.Lock()
 	data, ok := RoomData[devId]
+	Mu.Unlock()
 	if !ok  {
 		err = errors.New("нет данных")
 	}
