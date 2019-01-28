@@ -84,15 +84,16 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 		}
 
 		wsc := ent.WssConnect{mu, deviceId, ws,""}
-		Mu.Lock()
-		WsConnections[deviceId] = wsc
-		Mu.Unlock()
+
 		if(ws != nil) {
 			ws.SetPingHandler(ping)
 			ws.SetPongHandler(pong)
 			//ws.SetReadDeadline(time.Now().Add(pongWait))
 			ws.SetCloseHandler(wsClose)
 			log.Println("Create new Ws Connection: succes, device: ", deviceId)
+			Mu.Lock()
+			WsConnections[deviceId] = wsc
+			Mu.Unlock()
 			go wsProcessor(&wsc, db)
 		} else {
 			log.Println("Ws Connectionfor device: ", deviceId, " not created.")
