@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"homec/config"
-	"homec/db"
-	"homec/handle"
+	"github.com/KBaukov/homec/config"
+	"github.com/KBaukov/homec/db"
+	"github.com/KBaukov/homec/handle"
 	"log"
 	"net"
 	"net/http"

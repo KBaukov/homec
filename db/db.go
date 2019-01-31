@@ -3,7 +3,7 @@ package db
 import (
 	"errors"
 	"github.com/jmoiron/sqlx"
-	"homec/ent"
+	"github.com/KBaukov/homec/ent"
 	"log"
 	"time"
 )
