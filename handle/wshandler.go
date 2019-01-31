@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/jasonlvhit/gocron"
 	"github.com/KBaukov/homec/db"
 	"github.com/KBaukov/homec/ent"
 	"log"
@@ -28,7 +27,7 @@ const (
 
 func init() {
 	//log.Println("### Start Ping Scheduler ###")
-	gocron.Every(1).Second ().Do(pingActiveDevices)
+	//gocron.Every(1).Second ().Do(pingActiveDevices)
 	//gocron.Start()
 }
 
