@@ -3,6 +3,7 @@ package handle
 import (
 	"github.com/gorilla/websocket"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -53,17 +54,42 @@ func (h *Hub) run() {
 			h.connections[conn] = true
 		case conn := <-h.unregister:
 			if _, ok := h.connections[conn]; ok {
+				log.Println("### Unregistr: "+conn.deviceId)
+				unAssign(conn.deviceId)
 				delete(h.connections, conn)
 				close(conn.send)
 			}
 		case message := <-h.broadcast:
 			for conn := range h.connections {
 				select {
-				case conn.send <- message:
-				default:
-					close(conn.send)
-					delete(hub.connections, conn)
+					case conn.send <- message:
+					default:
+						close(conn.send)
+						delete(hub.connections, conn)
 				}
+			}
+		}
+	}
+}
+
+func (h *Hub) getConnByDevId(devId string) *Conn {
+	for conn := range h.connections {
+		if conn.deviceId == devId {
+			return conn
+		}
+	}
+	return nil
+}
+
+func (h *Hub) sendDataToWeb(msg string, sender string) {
+	for conn := range h.connections {
+		assDev := conn.deviceId
+		assRcp := WsAsignConns[assDev]
+		if strings.Contains(assDev, brPref) && sender==assRcp {
+			if !sendMsg(conn, msg) {
+				log.Println("# Send data to " + assDev + " failed.  #")
+			} else {
+				log.Println("# Send data to " + assDev + " success. #" )
 			}
 		}
 	}

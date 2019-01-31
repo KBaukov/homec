@@ -12,6 +12,10 @@ Ext.define('MapPanel', {
         this.bodyPadding = 10;
         this.bodyStyle = 'padding:10px; background: #ffffff'; //#cbddf3;';
 
+        this.wss = [];
+
+        this.assignDevice = '';
+
         this.initForm();
 
         MapPanel.superclass.initComponent.apply(this, arguments);
@@ -29,80 +33,18 @@ Ext.define('MapPanel', {
         this.listeners = { scope: this,
             render: function() {
                 this.getSensorsData();
-                this.wss.send("{\"action\":\"getDestValues\",\"type\":\"koteldata\"}");
-                //Ext.TaskManager.start(this.task);
-
             },
             resize: function() {
                 this.resizeImage();
             }
         };
-        // this.task = { scope: this,
-        //     run: function() { this.getValues() },
-        //     interval: 5000
-        // };
-
-
-
-        Ext.define('KatelData', {
-            extend: 'Ext.data.Model',
-            fields: [
-                {name: 'device_id', type: 'string'},
-                {name: 'to',  type: 'float'},
-                {name: 'tp',  type: 'float'},
-                {name: 'kw',  type: 'int'},
-                {name: 'pr',  type: 'float'},
-                {name: 'destTo',  type: 'float'},
-                {name: 'destTp',  type: 'float'},
-                {name: 'destKw',  type: 'int'},
-                {name: 'destPr',  type: 'float'},
-                {name: 'stage',  type: 'string'}
+        this.menu = Ext.create('Ext.menu.Menu', {
+            floating: true, scope: this,
+            items: [
+                { text: 'Reset', handler: this.resetDevice},
+                { text: 'Период обновления', handler: this.setDelay}
             ]
         });
-
-        this.store = Ext.create('Ext.data.Store', {
-            model: 'KatelData', id: this.id+'_DevStore'
-        });
-
-        this.wss = new WebSocket("wss://"+window.location.host+"/ws");
-
-        this.wss.onopen = function() {
-            console.log("WSS Соединение установлено.");
-        };
-
-        this.wss.onclose = function(event) {
-            if (event.wasClean) {
-                console.log('Соединение закрыто чисто');
-            } else {
-                console.log('Обрыв соединения'); // например, "убит" процесс сервера
-            }
-            console.log('Код: ' + event.code + ' причина: ' + event.reason);
-        };
-
-        this.wss.onmessage = function(event) {
-            var data = event.data;
-            console.log("Получены данные: " + data);
-
-            // var sens = Ext.getDom(this.mapData.id+'_sensor_'+opts.params.id);
-            // if(ansv.success) {
-            //     sens.style.opacity = 1;
-            //     //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
-            //     sens.innerHTML = parseFloat(ansv.data.tp) +'°C</br></br>'
-            //         + parseFloat(ansv.data.to)+'°C</br></br>'
-            //     //+ parseFloat(ansv.data.kw)+'kw'
-            //     ;
-            // } else {
-            //     if(ansv.msg=='нет данных') {
-            //         sens.style.opacity = 0.2;
-            //     } else error_mes('Ошибка', ansv.msg);
-            // }
-        };
-
-        this.wss.onerror = function(error) {
-            console.log("Ошибка " + error.message);
-        };
-
-
     },
     resizeImage: function() {
         var h = this.getHeight();
@@ -142,17 +84,19 @@ Ext.define('MapPanel', {
               if(ansv.success) {    
                 this.mapData.sensors = ansv.data;
                 this.setContent(this.mapData);
+                this.getValues();
               } else error_mes('Ошибка', ansv.msg);
             },
             failure: function() { this.unmask(); }
         });
     },
     getValues: function() {
-        var n = this.data.sensors.length;
+       // var n = this.data.sensors.length;
+        var n = this.mapData.sensors.length;
         for(var i=0; i<n; i++) {
-            var devId =  this.data.sensors[i].device_id;
+            var devId =  this.mapData.sensors[i].device_id;
             var devName =  devices.getName( devId );
-            var type = this.data.sensors[i].type;
+            var type = this.mapData.sensors[i].type;
             if(type=='kotelIcon') {
                 Ext.Ajax.request({
                     url: '/api/kotel/getvalues', scope: this, method: 'POST',
@@ -161,12 +105,8 @@ Ext.define('MapPanel', {
                         var ansv = Ext.decode(response.responseText);
                         var sens = Ext.getDom(this.mapData.id+'_sensor_'+opts.params.id);
                         if(ansv.success) {
-                            sens.style.opacity = 1;
-                            //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
-                            sens.innerHTML = parseFloat(ansv.data.tp) +'°C</br></br>'
-                                + parseFloat(ansv.data.to)+'°C</br></br>'
-                                //+ parseFloat(ansv.data.kw)+'kw'
-                            ;
+                            this.dataRender('koteldata', sens, ansv);
+                            sens.style.opacity = 0.2;
                         } else {
                             if(ansv.msg=='нет данных') {
                                 sens.style.opacity = 0.2;
@@ -183,14 +123,11 @@ Ext.define('MapPanel', {
                         var ansv = Ext.decode(response.responseText);
                         var sens = Ext.getDom(this.mapData.id+'_sensor_'+opts.params.id);
                         if(ansv.success) {
-                            sens.style.opacity = 1;
-                            //sens.style.opacity = (ansv.status ==1) ? 1 : 0.3;
-                            sens.innerHTML = parseFloat(ansv.data.t) +'°C</br></br>'
-                                +( (ansv.h!='0.00') ? parseFloat(ansv.data.h)+'%' : '');
-
+                            this.dataRender('roomdata', sens, ansv);
+                            sens.style.opacity = 0.2;
                         }  else {
                             if(ansv.msg=='нет данных') {
-                                sens.style.opacity = 0.2;
+                                //sens.style.opacity = 0.2;
                             } else error_mes('Ошибка', ansv.msg);
                         }
                     },
@@ -212,11 +149,12 @@ Ext.define('MapPanel', {
                 el.ondblclick = this.chartData
                 el.ontouchend  = this.chartData
             }
+            this.wssConnUp(ss[i].type, el)
         }
     },
     kotelControl: function(ev) {
         var cmp = Ext.getCmp('map'+ev.target.id.split('_')[0]);
-        cmp.controllWin  = Ext.create('KotelControlWin');
+        cmp.controllWin  = Ext.create('KotelControlWin', {papa: this});
         cmp.controllWin.openWin();
     },
     chartData: function(ev) {
@@ -224,5 +162,91 @@ Ext.define('MapPanel', {
         var cmp = Ext.getCmp('map'+dd[0]);
         cmp.chartWin  = Ext.create('RoomDataChartWin', {devId: dd[2], sensName: devices.getName(dd[2])});
         cmp.chartWin.openWin();
+    },
+    wssConnUp: function(type, el) {
+        var wss = new WebSocket("wss://"+window.location.host+"/ws");
+
+        wss.onopen = function(event) {
+            var conn = event.target;
+            //var sens = WssConnections.getElByConn(conn);
+            //var dd = sens.id.split('_');
+            //conn.send('{"action":"assign","assign":"'+conn.assignDev+'"}');
+            console.log("WSS Соединение установлено.");
+            Ext.TaskManager.start(conn.task);
+        };
+        wss.onerror = function(error) { console.log("Ошибка " + error.message); };
+        wss.onclose = function(event) {
+            if (event.wasClean) { console.log('Соединение закрыто чисто'); }
+            else { console.log('Обрыв соединения'); }
+            console.log('Код: ' + event.code + ' причина: ' + event.reason);
+            WssConnections.deleteByConn(event.target);
+        };
+        wss.onmessage = function(event) {
+            console.log("Получены данные: " + event.data);
+            var data = Ext.decode(event.data);
+            var conn = event.target;
+            var sens = WssConnections.getElByConn(conn);
+
+            if(data.action =='assign' && data.success) {
+                Ext.TaskManager.stop(conn.task);
+                //sens.style.opacity = 1;
+            } else if(data.action == 'unassign') {
+                //error_mes('Ошибка', data.msg);
+                Ext.TaskManager.start(conn.task)
+                sens.style.opacity = 0.2;
+            } else if(data.action == 'datasend') {
+                conn.dataRender(data.type, sens, data);
+            }
+
+        };
+
+        wss.dataRender = this.dataRender;
+        wss.assignDev = devices.getName(el.id.split('_')[2]);
+
+        el.style.opacity = 0.2;
+        wss.task = { scope: wss,
+            run: function() {
+                this.send('{"action":"assign","assign":"'+this.assignDev+'"}');
+            },
+            interval: 500
+        };
+        el.menu = this.menu;
+        el.oncontextmenu = function(e, cmp=this, conn=wss) {
+
+            cmp.menu.init = {el: cmp, conn: conn};
+
+            cmp.menu.showAt(e.pageX, e.pageY, false);
+
+            if(event.preventDefault != undefined)
+                event.preventDefault();
+            if(event.stopPropagation != undefined)
+                event.stopPropagation();
+
+            return null;
+        };
+
+        WssConnections.connections.push( {el:el, conn: wss} );
+    },
+    dataRender: function(type, sens, data) {
+        if(type == 'koteldata') {
+            sens.innerHTML = parseFloat(data.data.tp).toFixed(2) +'°C</br></br>'
+                + parseFloat(data.data.to).toFixed(2)+'°C</br></br>';
+        } else if( type == 'roomdata' ) {
+            sens.innerHTML = parseFloat(data.data.t).toFixed(2) +'°C</br></br>'
+                +( (data.data.h!='0.00') ? parseFloat(data.data.h).toFixed(2)+'%' : '');
+        }
+        sens.style.opacity = 1;
+    },
+    resetDevice: function(e,t) {
+        var devId =e.parentMenu.init.el.id.split('_')[2];
+        var devName = devices.getName(devId);
+        e.parentMenu.init.conn.send('{"action":"resend", "recipient":"'+devName+'", "msg":"e3Jlc2V0fQ=="}');
+    },
+    setDelay: function(e,t) {
+        var devId =e.parentMenu.init.el.id.split('_')[2];
+        var devName = devices.getName(devId);
+        var conn = e.parentMenu.init.conn;
+        this.delayWin = Ext.create('KotelDelayWin', {papa: this, devName: devName, wss: conn});
+        this.delayWin.openWin();
     }
 });

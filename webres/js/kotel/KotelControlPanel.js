@@ -49,6 +49,9 @@ Ext.define('KotelControlPanel', {
                 +'<div id="dig1"></div><div id="dig2"></div><div id="dot"></div>'
                 +'<div id="leftButt"></div><div id="rightButt"></div><div id="mokButt"></div>'
                 +'</div>';
+
+        this.kotelId = devices.getKotelId();
+
        
         // this.tbar = [
         //     Ext.create('Ext.Button', {text: 'Отменить', scope: this, disabled: false, id: 'execButt',
@@ -87,6 +90,19 @@ Ext.define('KotelControlPanel', {
                 //Ext.TaskManager.start(this.valuesTask);
             }
         };
+
+
+    },
+    onMessage: function(butt) {
+        if(butt=='L')
+            this.leftClick();
+        if(butt=='R')
+            this.rightClick();
+        if(butt=='M')
+            this.okClick();
+
+        //this.setDest();
+        this.setDisabled(false);
     },
     leftClick: function(ev) {
         //var cmp =Ext.getCmp('kotelControlPanel');
@@ -177,8 +193,10 @@ Ext.define('KotelControlPanel', {
         //this.command += "M";
     },    
     dispCurrentView: function() {
-        if(this.mode==0) this.display(this.currVal[this.curSatgeInx]);
-        else this.display(this.destVal[this.curSatgeInx]);
+        if(this.mode==0)
+            this.display(this.currVal[this.curSatgeInx]);
+        else
+            this.display(this.destVal[this.curSatgeInx]);
     },
     display: function(val) {
         var d1 = '';
@@ -204,33 +222,20 @@ Ext.define('KotelControlPanel', {
         var id = ev.target.id;
 		var butt = id.substring(0,1).toUpperCase();
 		var cmp =Ext.getCmp('kotelControlPanel');
+        if(cmp.stage[cmp.curSatgeInx]=='pr' && butt=='M'){
+            cmp.setDisabled(true);
+            setTimeout( function(cmp) { var cmp =Ext.getCmp('kotelControlPanel'); cmp.setDisabled(false) }, 200);
+            return;
+        }
+        var stage = cmp.nextStage(butt);
+        var hash = md5((new Date()).toLocaleString());
+        var rMsg = '{"action":"resend", "recipient":"'+cmp.kotelId+'", "msg":"'
+            +btoa('{"action":"pessButton","butt":"'+butt+'","sender":"","hash":"'+hash+'","stage":"'+stage+'"}') //
+        +'"}';
 		cmp.setDisabled(true);
-
-		//var stage = cmp.mode+'_'+cmp.curSatgeInx;
-		
-        Ext.Ajax.request({
-            url: '/api/kotel/pressbutt', scope: this, method: 'POST',
-            params: {button: butt},
-            success: function(response, opts) {
-              var ansv = Ext.decode(response.responseText);
-			  
-              if(ansv.success) { 
-				
-				if(butt=='L')
-					cmp.leftClick();
-				if(butt=='R')
-					cmp.rightClick();
-				if(butt=='M')
-					cmp.okClick();
-
-				cmp.setDest();
-
-				cmp.setDisabled(false);
-                
-              } else { error_mes('Ошибка', ansv.msg); cmp.setDisabled(false); }  
-            },
-            failure: function() { }
-        });
+		cmp.papa.wss.butt = butt;
+		cmp.papa.wss.hash = hash;
+        cmp.papa.wss.send(rMsg);
     },
     getValues: function() {
         Ext.Ajax.request({
@@ -245,66 +250,58 @@ Ext.define('KotelControlPanel', {
                     this.currVal[0]=parseInt(ansv.data.tp)+"";
                     this.currVal[1]=parseInt(ansv.data.to)+"";
                     this.currVal[2]=parseInt(ansv.data.kw)+"";
-                    if(!this.destInit) {
-                        this.destVal[0]=parseInt(ansv.data.destTp)+"";
-                        this.destVal[1]=parseInt(ansv.data.destTo)+"";
-                        this.destVal[2]=parseInt(ansv.data.destKw)+"";
-                        if(this.destVal[0]<25) this.destVal[0]="mm";
-                        if(this.destVal[1]<35) this.destVal[1]="mm";
-                        this.destInit = true;
-                    }
+                    //if(!this.destInit) {
+                    this.destVal[0]=parseInt(ansv.data.destTp)+"";
+                    this.destVal[1]=parseInt(ansv.data.destTo)+"";
+                    this.destVal[2]=parseInt(ansv.data.destKw)+"";
+                    if(this.destVal[0]<25) this.destVal[0]="mm";
+                    if(this.destVal[1]<35) this.destVal[1]="mm";
+                    this.destInit = true;
+                    //}
+                    var stage = ansv.data.stage.split('_');
+                    this.mode = stage[0];
+                    this.curSatgeInx = stage[1];
+                    this.curVaInx = this.getCurrVaIndex(this.destVal[2]);
 
+                    this.setLedPosition(this.curSatgeInx);
                     this.dispCurrentView();
+
                 } else error_mes('Ошибка', ansv.msg);
             },
             failure: function() { }
         });
     },
-    // getStage: function() {
-    //     Ext.Ajax.request({
-    //         url: '/api/kotel/getvalues', scope: this, method: 'GET',
-    //         success: function(response, opts) {
-    //             var ansv = Ext.decode(response.responseText);
-    //             if(ansv.success) {
-    //                 var st = ansv.data.stage.split('_');
-    //                 this.mode = st[0];
-    //                 this.curSatgeInx = st[1];
-    //                 this.setLedPosition(this.curSatgeInx);
-    //                 if(this.mode==1) {
-    //                     this.startBlink();
-    //                     this.display(this.destVal[this.curSatgeInx]);
-    //                 }
-    //
-    //                 this.dispCurrentView();
-    //             } else error_mes('Ошибка', ansv.msg);
-    //         },
-    //         failure: function() { }
-    //     });
-    // },
     setDest: function() {
         var suf = '.0';
         var currStage = this.mode+'_'+this.curSatgeInx;
+        // var hash = md5((new Date()).toLocaleString());
+        // var rMsg = '{"action":"resend", "recipient":"'+cmp.kotelId+'", "msg":"'
+        //     +btoa('{"action":"setDestValues","sender":"","hash":"'+hash+'","stage":"'+currStage+'"'
+        //         +'",destTp":'+(this.destVal[0]=='mm' ? '0':this.destVal[0])+'.0'
+        //         +',"destTo":'+(this.destVal[1]=='mm' ? '0':this.destVal[1])+'.0'
+        //         +',"destKw":'+this.destVal[2]
+        //         +',"destPr":'+this.destVal[3]
+        //         +',"destTc":'+this.desttc + '}'
+        // +'"}';
+        // this.papa.wss.hash = hash;
+        // this.papa.wss.send(rMsg);
+
+        var data = {
+            desttp: (this.destVal[0]=='mm' ? '1':this.destVal[0])+suf,
+            destto: (this.destVal[1]=='mm' ? '1':this.destVal[1])+suf,
+            desttc: this.desttc,
+            destkw: this.destVal[2],
+            destpr: this.destVal[3],
+            stage: currStage
+        };
         Ext.Ajax.request({
             url: '/api/kotel/setdest', scope: this, method: 'POST',
-            params: {desttp: this.destVal[0]+suf, destto: this.destVal[1]+suf, desttc: this.desttc, destkw: this.destVal[2], destpr: this.destVal[3], stage: currStage},
+            params: data,
             success: function(response, opts) {
               var ansv = Ext.decode(response.responseText);
-              if(ansv.success) {  
-
-              } else error_mes('Ошибка', ansv.msg);  
-            },
-            failure: function() { }
-        });
-    },
-    pressButt: function(butt) {
-        Ext.Ajax.request({
-            url: '/api/kotel/pressbutt', scope: this, method: 'POST',
-            params: {button: butt},
-            success: function(response, opts) {
-              var ansv = Ext.decode(response.responseText);
-              if(ansv.success) {  
-
-              } else error_mes('Ошибка', ansv.msg);  
+              if(ansv.success) {
+                this.papa.stopSession();
+              } else error_mes('Ошибка', ansv.msg);
             },
             failure: function() { }
         });
@@ -326,6 +323,34 @@ Ext.define('KotelControlPanel', {
     setLedPosition: function(idx) {
         if(idx==5) idx=4;
         this.led1.style.left = (46+idx*70) + 'px';
+    },
+    nextStage: function(butt) { //cmp.mode+'_'+cmp.curSatgeInx;
+        var mm=this.mode; var st = st=this.curSatgeInx;
+        if(butt=='M') {
+            if(this.mode ==1)  mm=0;
+            else mm=1;
+        }
+        if(butt=='L') {
+            if(this.mode ==0) {
+                if(this.curSatgeInx>0) st=this.curSatgeInx-1;
+                else this.curSatgeInx=3;
+            }
+        }
+        if(butt=='R') {
+            if(this.mode ==0) {
+                if(this.curSatgeInx<3) st=this.curSatgeInx+1;
+                else st=0;
+            }
+        }
+
+        return mm+'_'+st;
+    },
+    getCurrVaIndex: function(val) {
+        for(var i=0; i<this.va.length; i++) {
+            if(this.va[i]==val)
+                return i;
+        }
+        return -1;
     }
 
 });
