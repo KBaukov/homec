@@ -20,7 +20,8 @@ const (
 	maxMessageSize = 8192  				// Maximum message size allowed from peer.
 	pingWait = 60 * time.Second 		// Time allowed to read the next pong message from the peer.
 	pongWait = 30 * time.Second 		// Time allowed to read the next pong message from the peer.
-	pingPeriod = (pongWait * 9) / 10	// Send pings to peer with this period. Must be less than pongWait.
+	//pingPeriod = (pongWait * 9) / 10	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = 1 * time.Second	// Send pings to peer with this period. Must be less than pongWait.
 	closeGracePeriod = 10 * time.Second	// Time to wait before force close on connection.
 	brPref = "WBR_"
 )
@@ -119,10 +120,19 @@ func wsClose(code int, reason string) error {
 
 func wsProcessor(wsc *ent.WssConnect, db db.DbService) {
 	//var conn = wsc.Connection
-	var devId = wsc.DeviceId
-	defer wsc.Connection.Close()
+	devId := wsc.DeviceId
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		wsc.Connection.Close()
+	}()
 
 	for {
+
+		select {
+		case <-ticker.C:
+			log.Println("#########################################################################################################3")
+		}
 
 		msg, err := WsRead(wsc);
 		if  err != nil {
