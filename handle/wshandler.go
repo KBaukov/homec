@@ -131,6 +131,7 @@ func wsProcessor(wsc *ent.WssConnect, db db.DbService) {
 
 		select {
 		case <-ticker.C:
+			pingDevice(wsc, devId)
 			log.Println("#########################################################################################################3")
 		}
 
