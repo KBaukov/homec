@@ -26,10 +26,6 @@ const (
 )
 
 func init() {
-
-	//log.Println("### Ping Scheduler is started ###")
-	//gocron.Every(1).Seconds().Do(pingActiveDevices)
-	//gocron.Start()
 	go hub.run()
 }
 
@@ -39,9 +35,6 @@ func init() {
 //}
 
 var (
-	//WsConnections     = make(map[string]*websocket.Conn)
-	//configurationPath = flag.String("config", "config.json", "Путь к файлу конфигурации")
-	//cfg               = config.LoadConfig(*configurationPath)
 	WsAllowedOrigin   = "HomeControlApp" //homec.Cfg.WsAllowedOrigin
 	IsControlSessionOpen = false;
 	WsPresButtFlag = false;
@@ -356,33 +349,41 @@ func (c *Conn) writePump(db db.DbService) {
 			}
 		case <-ticker.C:
 			//log.Println("############################ Ping ##############################")
-			if err := c.write(websocket.PingMessage, []byte{}); err != nil {
-				log.Println("# Send ping to " + c.GetDeviceId() + " failed.  #")
-				return
+			if c != nil {
+				if err := c.write(websocket.PingMessage, []byte{}); err != nil {
+					log.Println("# Send ping to " + c.GetDeviceId() + " failed.  #")
+					return
+				} else {
+					log.Println("# Send ping to " + c.GetDeviceId() + " success.  #")
+				}
 			} else {
-				log.Println("# Send ping to " + c.GetDeviceId() + " success.  #")
+				log.Println("# Send ping to " + c.GetDeviceId() + " failed.  #")
 			}
+
 		}
 	}
 }
 
 func sendMsg(c *Conn, m string) bool {
-	//err := c.write(1, []byte(m))
+	if c != nil {
+		c.send <- []byte(m)
+		log.Println("[WS]:send:", m, " succes")
+		return true
+	} else {
+		log.Println("[WS]:send:", m, " failed")
+		return false
+	}
 
-	c.send <- []byte(m)
 
-	//if err != nil {
-	//	log.Println("[WS]:send:", err)
-	//	return false
-	//}
-	log.Println("[WS]:send:", m, " succes")
-	return true
 }
 
 func unAssign(devId string) {
 	for key, val := range WsAsignConns {
 		if val == devId {
-			hub.getConnByDevId(key).send <- []byte("{\"action\":\"unassign\",\"device\":\""+val+"\"}")
+			conn := hub.getConnByDevId(key);
+			if conn != nil {
+				hub.getConnByDevId(key).send <- []byte("{\"action\":\"unassign\",\"device\":\""+val+"\"}")
+			}
 			delete(WsAsignConns, key)
 		}
 	}
