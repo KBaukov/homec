@@ -321,8 +321,6 @@ func WsRead(wsc *ent.WssConnect) (string, error) {
 			e := wsc.Connection.Close()
 			if e!=nil {
 				log.Println("[WS]:close connecton error:", err)
-			} else {
-				log.Println("[WS]:connection close...")
 			}
 			wsc.Connection =nil;
 			deleteWsConn(wsc.DeviceId)
@@ -353,9 +351,6 @@ func sendMsg(wsc *ent.WssConnect, msg string) bool {
 			e := wsc.Connection.Close()
 			if e!=nil {
 				log.Println("[WS]:close connecton error:", err)
-			} else {
-				log.Println("[WS]:connection close...")
-
 			}
 			wsc.Connection =nil;
 			deleteWsConn(wsc.DeviceId)
