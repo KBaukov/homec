@@ -132,7 +132,6 @@ func wsProcessor(wsc *ent.WssConnect, db db.DbService) {
 		select {
 		case <-ticker.C:
 			pingDevice(wsc, devId)
-			log.Println("#########################################################################################################3")
 		}
 
 		msg, err := WsRead(wsc);
@@ -419,8 +418,10 @@ func pingDevice(wsc *ent.WssConnect, devId string) (bool,error) {
 	defer wsc.Mu.Unlock()
 	err := wsc.Connection.WriteMessage(websocket.PingMessage, []byte(devId));
 	if err != nil {
+		log.Println("# Send ping to " + devId + " failed.     #")
 		return false, err
 	}
+	log.Println("# Send ping to " + devId + " success.    #" )
 	return true, err;
 }
 
