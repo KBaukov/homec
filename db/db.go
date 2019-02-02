@@ -5,12 +5,14 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/KBaukov/homec/ent"
 	"log"
+	"sync"
 	"time"
 )
 
 
 var (
-	RoomData     = make(map[string]ent.SensorsData)
+	RoomData    =	make(map[string]ent.SensorsData)
+	sensorMx	=	sync.RWMutex{}
 )
 const (
 	authQuery = `SELECT * FROM hc.users WHERE users.login = ? AND users.pass = ?`
@@ -643,14 +645,17 @@ func (db Database) AddRoomData(data ent.SensorsData) (bool, error) {
 		return false, err
 	}
 
+	sensorMx.Lock()
 	RoomData[data.DEVICE_ID] = data
-
+	sensorMx.Unlock()
 	return true, err
 }
 
 func (db Database) GetRoomData(devId string) (ent.SensorsData, error) {
 	var err error
+	sensorMx.RLock()
 	data, ok := RoomData[devId]
+	sensorMx.RUnlock()
 	if !ok  {
 		err = errors.New("нет данных")
 	}

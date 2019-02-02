@@ -86,6 +86,13 @@ type SensorsData struct {
 	DATE        time.Time `json:"date"`
 }
 
+type ResendMessage struct {
+	ACTION 		string `json"action"`
+	RECIPIENT   string `json"recipient"`
+	SENDER		string `json"sender"`
+	MESSAGE   	string `json:"msg"`
+}
+
 type WsSendData struct {
 	ACTION string      `json"action"`
 	TYPE   string      `json"type"`
