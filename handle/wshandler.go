@@ -106,208 +106,215 @@ func (c *Conn) readPump(db db.DbService) {
 	devId := c.deviceId
 
 	for {
-		mt, message, err := c.ws.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Printf("error: %v", err)
-			}
-			break
-		}
-
-		log.Printf("[WS]:recive: %s, type: %d", message, mt)
-		msg := string(message)
-
-		if strings.Contains(msg, "\"action\":\"connect\"") {
-			if !sendMsg(c, "{action:connect,success:true}") {
-				break
-			} else {
-				log.Println("{action:connect,success:true}", c.deviceId)
-			}
-		}
-
-		if strings.Contains(msg, "\"action\":\"assign\"") {
-			assign := msg[29:len(msg)-2]
-			cc := hub.getConnByDevId(assign)
-			if cc != nil {
-				WsAsignConns[devId] = assign
-				log.Println("#### Assign", assign, " to ", devId)
-				if !sendMsg(c, "{\"action\":\"assign\",\"success\":true}") {
-					break
-				}
-			} else {
-				if !sendMsg(c, "{\"action\":\"assign\",\"success\":false}") {
-					break
-				}
-			}
-
-		}
-
-		if strings.Contains(msg, "\"action\":\"resend\"") {
-			var rMsg ent.ResendMessage
-
-			err = json.Unmarshal([]byte(msg), &rMsg)
+		if c != nil {
+			mt, message, err := c.ws.ReadMessage()
 			if err != nil {
-				log.Println("Error data unmarshaling: ", err)
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
+					log.Printf("error: %v", err)
+				}
+				break
 			}
 
-			rConn :=  hub.getConnByDevId(rMsg.RECIPIENT)
-			sender := devId
+			log.Printf("[WS]:recive: %s, type: %d", message, mt)
+			msg := string(message)
 
-			message, _ := base64.URLEncoding.DecodeString(rMsg.MESSAGE)
-			mm := strings.Replace(string(message),"\"sender\":\"\"", "\"sender\":\""+sender+"\"", 1)
-			log.Println("[WS]:resend message: ",  mm, " to: ",  rMsg.RECIPIENT)
-			sendMsg(rConn, mm)
-		}
-
-		if strings.Contains(msg, "\"action\":\"datasend\"") {
-			//log.Println("-----------------------------")
-			if strings.Contains(msg, "\"type\":\"koteldata\"") {
-				var data ent.KotelData
-
-				wsData := ent.WsSendData{"", "", ""}
-
-				err = json.Unmarshal([]byte(msg), &wsData)
-				if err != nil {
-					log.Println("Error data unmarshaling: ", err)
-				}
-
-				dd, err := json.Marshal(wsData.DATA)
-				if err != nil {
-					log.Println("Error data marshaling: ", err)
-				}
-
-				err = json.Unmarshal(dd, &data)
-				if err != nil {
-					log.Println("Error data unmarshaling: ", err)
-				}
-
-				//log.Println("incoming kotel data:", data)
-
-				if !sendMsg(c, "{action:datasend,success:true}") {
-					log.Println("Send to " + devId + ": failed")
+			if strings.Contains(msg, "\"action\":\"connect\"") {
+				if !sendMsg(c, "{action:connect,success:true}") {
 					break
 				} else {
-					//log.Println("Send to " + devId + ": success")
-					err = db.UpdKotelMeshData(data.TO, data.TP, data.KW, data.PR)
-					if err != nil {
-						log.Println("Error data writing in db: ", err)
+					log.Println("{action:connect,success:true}", c.deviceId)
+				}
+			}
+
+			if strings.Contains(msg, "\"action\":\"assign\"") {
+				assign := msg[29:len(msg)-2]
+				cc := hub.getConnByDevId(assign)
+				if cc != nil {
+					WsAsignConns[devId] = assign
+					log.Println("#### Assign", assign, " to ", devId)
+					if !sendMsg(c, "{\"action\":\"assign\",\"success\":true}") {
+						break
 					}
-					_, err = db.AddKotelStatData(data.TO, data.TP, data.KW, data.PR)
+				} else {
+					if !sendMsg(c, "{\"action\":\"assign\",\"success\":false}") {
+						break
+					}
+				}
+
+			}
+
+			if strings.Contains(msg, "\"action\":\"resend\"") {
+				var rMsg ent.ResendMessage
+
+				err = json.Unmarshal([]byte(msg), &rMsg)
+				if err != nil {
+					log.Println("Error data unmarshaling: ", err)
+				}
+
+				rConn :=  hub.getConnByDevId(rMsg.RECIPIENT)
+				sender := devId
+
+				message, _ := base64.URLEncoding.DecodeString(rMsg.MESSAGE)
+				mm := strings.Replace(string(message),"\"sender\":\"\"", "\"sender\":\""+sender+"\"", 1)
+				log.Println("[WS]:resend message: ",  mm, " to: ",  rMsg.RECIPIENT)
+				sendMsg(rConn, mm)
+			}
+
+			if strings.Contains(msg, "\"action\":\"datasend\"") {
+				//log.Println("-----------------------------")
+				if strings.Contains(msg, "\"type\":\"koteldata\"") {
+					var data ent.KotelData
+
+					wsData := ent.WsSendData{"", "", ""}
+
+					err = json.Unmarshal([]byte(msg), &wsData)
 					if err != nil {
-						log.Println("Error data writing in db: ", err)
+						log.Println("Error data unmarshaling: ", err)
+					}
+
+					dd, err := json.Marshal(wsData.DATA)
+					if err != nil {
+						log.Println("Error data marshaling: ", err)
+					}
+
+					err = json.Unmarshal(dd, &data)
+					if err != nil {
+						log.Println("Error data unmarshaling: ", err)
+					}
+
+					//log.Println("incoming kotel data:", data)
+
+					if !sendMsg(c, "{action:datasend,success:true}") {
+						log.Println("Send to " + devId + ": failed")
+						break
+					} else {
+						//log.Println("Send to " + devId + ": success")
+						err = db.UpdKotelMeshData(data.TO, data.TP, data.KW, data.PR)
+						if err != nil {
+							log.Println("Error data writing in db: ", err)
+						}
+						_, err = db.AddKotelStatData(data.TO, data.TP, data.KW, data.PR)
+						if err != nil {
+							log.Println("Error data writing in db: ", err)
+						}
+
+						hub.sendDataToWeb(msg, devId);
+
+					}
+
+				}
+
+				if strings.Contains(msg, "\"type\":\"roomdata\"") {
+					var data ent.SensorsData
+
+					wsData := ent.WsSendData{"", "", ""}
+
+					err = json.Unmarshal([]byte(msg), &wsData)
+					if err != nil {
+						log.Println("Error data unmarshaling: ", err)
+					}
+
+					dd, err := json.Marshal(wsData.DATA)
+					if err != nil {
+						log.Println("Error data marshaling: ", err)
+					}
+
+					err = json.Unmarshal(dd, &data)
+					if err != nil {
+						log.Println("Error data unmarshaling: ", err)
+					}
+
+					data.DATE = time.Now();
+
+					//log.Println("incoming room data:", data)
+
+					if !sendMsg(c, "{action:datasend,success:true}") {
+						log.Println("Send to " + devId + ": failed")
+						break
+					} else {
+						//log.Println("Send to " + devId + ": success")
+						success, err := db.AddRoomData(data)
+						if err != nil || !success {
+							log.Println("Error data writing in db: ", err)
+						}
 					}
 
 					hub.sendDataToWeb(msg, devId);
 
 				}
+			}
+			if strings.Contains(msg, "\"action\":\"pessButton\"") {
+				if strings.Contains(msg, "true") {
+					WsPresButtFlag = false;
+				}
 
 			}
-
-			if strings.Contains(msg, "\"type\":\"roomdata\"") {
-				var data ent.SensorsData
-
-				wsData := ent.WsSendData{"", "", ""}
-
-				err = json.Unmarshal([]byte(msg), &wsData)
-				if err != nil {
-					log.Println("Error data unmarshaling: ", err)
+			if strings.Contains(msg, "\"action\":\"sessionStart\"") {
+				if strings.Contains(msg, "true") {
+					IsControlSessionOpen = true;
 				}
 
-				dd, err := json.Marshal(wsData.DATA)
-				if err != nil {
-					log.Println("Error data marshaling: ", err)
+			}
+			if strings.Contains(msg, "\"action\":\"sessionStop\"") {
+				if strings.Contains(msg, "true") {
+					IsControlSessionOpen = false;
 				}
 
-				err = json.Unmarshal(dd, &data)
-				if err != nil {
-					log.Println("Error data unmarshaling: ", err)
+			}
+			if strings.Contains(msg, "\"action\":\"getLastValues\"") {
+				if strings.Contains(msg, "\"type\":\"koteldata\"") {
+					kd, err := db.GetKotelData()
+					log.Println("Get last data from db: ", kd)
+					if err != nil {
+						log.Println("Error while read data from data base: ", err)
+					}
+
+					kData, err := json.Marshal(kd)
+					if err != nil {
+						log.Println("Error data marshaling: ", err)
+					}
+
+					sData := string(kData)
+					msg := "{\"action\":\"setLastValues\"," + sData[1:len(sData)]
+					log.Println("Last Data is: ", msg)
+					if !sendMsg(c, msg) {
+						break
+					}
+				}
+				if strings.Contains(msg, "\"type\":\"roomdata\"") {
+
 				}
 
-				data.DATE = time.Now();
+			}
+			if strings.Contains(msg, "\"action\":\"getDestValues\"") {
+				if strings.Contains(msg, "\"type\":\"koteldata\"") {
+					kd, err := db.GetKotelData()
+					log.Println("Get dest data from db: ", kd)
+					if err != nil {
+						log.Println("Error while read data from data base: ", err)
+					}
 
-				//log.Println("incoming room data:", data)
+					kData, err := json.Marshal(kd)
+					if err != nil {
+						log.Println("Error data marshaling: ", err)
+					}
 
-				if !sendMsg(c, "{action:datasend,success:true}") {
-					log.Println("Send to " + devId + ": failed")
-					break
-				} else {
-					//log.Println("Send to " + devId + ": success")
-					success, err := db.AddRoomData(data)
-					if err != nil || !success {
-						log.Println("Error data writing in db: ", err)
+					sData := string(kData)
+					msg := "{\"action\":\"setDestValues\"," + sData[66:len(sData)]
+					//msg := strings.Replace(sData, "{", "{\"action\":\"setDestValues\", ", 1)
+					//msg := "{\"action\":\"setDestValues\",\"device_id\":\"ESP_6822FC\",\"to\":65.35,\"tp\":50.34,\"kw\":11,\"pr\":2.43,\"destTo\":36.0,\"destTp\":29.0,\"destKw\":2,\"destPr\":1.8,\"destTc\":25.0,\"stage\":\"0_1\"}"
+					log.Println("Dest Data is: ", msg)
+					if !sendMsg(c, msg) {
+						break
 					}
 				}
 
-				hub.sendDataToWeb(msg, devId);
-
-			}
-		}
-		if strings.Contains(msg, "\"action\":\"pessButton\"") {
-			if strings.Contains(msg, "true") {
-				WsPresButtFlag = false;
 			}
 
-		}
-		if strings.Contains(msg, "\"action\":\"sessionStart\"") {
-			if strings.Contains(msg, "true") {
-				IsControlSessionOpen = true;
-			}
-
-		}
-		if strings.Contains(msg, "\"action\":\"sessionStop\"") {
-			if strings.Contains(msg, "true") {
-				IsControlSessionOpen = false;
-			}
-
-		}
-		if strings.Contains(msg, "\"action\":\"getLastValues\"") {
-			if strings.Contains(msg, "\"type\":\"koteldata\"") {
-				kd, err := db.GetKotelData()
-				log.Println("Get last data from db: ", kd)
-				if err != nil {
-					log.Println("Error while read data from data base: ", err)
-				}
-
-				kData, err := json.Marshal(kd)
-				if err != nil {
-					log.Println("Error data marshaling: ", err)
-				}
-
-				sData := string(kData)
-				msg := "{\"action\":\"setLastValues\"," + sData[1:len(sData)]
-				log.Println("Last Data is: ", msg)
-				if !sendMsg(c, msg) {
-					break
-				}
-			}
-			if strings.Contains(msg, "\"type\":\"roomdata\"") {
-
-			}
-
-		}
-		if strings.Contains(msg, "\"action\":\"getDestValues\"") {
-			if strings.Contains(msg, "\"type\":\"koteldata\"") {
-				kd, err := db.GetKotelData()
-				log.Println("Get dest data from db: ", kd)
-				if err != nil {
-					log.Println("Error while read data from data base: ", err)
-				}
-
-				kData, err := json.Marshal(kd)
-				if err != nil {
-					log.Println("Error data marshaling: ", err)
-				}
-
-				sData := string(kData)
-				msg := "{\"action\":\"setDestValues\"," + sData[66:len(sData)]
-				//msg := strings.Replace(sData, "{", "{\"action\":\"setDestValues\", ", 1)
-				//msg := "{\"action\":\"setDestValues\",\"device_id\":\"ESP_6822FC\",\"to\":65.35,\"tp\":50.34,\"kw\":11,\"pr\":2.43,\"destTo\":36.0,\"destTp\":29.0,\"destKw\":2,\"destPr\":1.8,\"destTc\":25.0,\"stage\":\"0_1\"}"
-				log.Println("Dest Data is: ", msg)
-				if !sendMsg(c, msg) {
-					break
-				}
-			}
-
+		} else {
+			log.Println("# Connection lost    #")
+			hub.unregister <- c
+			break
 		}
 
 	}
@@ -323,43 +330,46 @@ func (c *Conn) writePump(db db.DbService) {
 		c.ws.Close()
 	}()
 	for {
-		select {
-		case message, ok := <-c.send:
-			if !ok {
-				// The hub closed the channel.
-				c.write(websocket.CloseMessage, []byte{})
-				return
-			}
-
-			c.ws.SetWriteDeadline(time.Now().Add(writeWait))
-			w, err := c.ws.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(message)
-			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				//w.Write(newline)
-				w.Write(<-c.send)
-			}
-
-			if err := w.Close(); err != nil {
-				return
-			}
-		case <-ticker.C:
-			//log.Println("############################ Ping ##############################")
-			if c != nil {
-				if err := c.write(websocket.PingMessage, []byte{}); err != nil {
-					log.Println("# Send ping to " + c.GetDeviceId() + " failed.  #")
+		if c != nil {
+			select {
+			case message, ok := <-c.send:
+				if !ok {
+					// The hub closed the channel.
+					c.write(websocket.CloseMessage, []byte{})
 					return
-				} else {
-					log.Println("# Send ping to " + c.GetDeviceId() + " success.  #")
 				}
-			} else {
-				log.Println("# Send ping to " + c.GetDeviceId() + " failed.  #")
-			}
 
+				c.ws.SetWriteDeadline(time.Now().Add(writeWait))
+				w, err := c.ws.NextWriter(websocket.TextMessage)
+				if err != nil {
+					return
+				}
+				w.Write(message)
+				// Add queued chat messages to the current websocket message.
+				n := len(c.send)
+				for i := 0; i < n; i++ {
+					//w.Write(newline)
+					w.Write(<-c.send)
+				}
+
+				if err := w.Close(); err != nil {
+					return
+				}
+			case <-ticker.C:
+				//log.Println("############################ Ping ##############################")
+
+					if err := c.write(websocket.PingMessage, []byte{}); err != nil {
+						log.Println("# Send ping to " + c.GetDeviceId() + " failed.  #")
+						return
+					} else {
+						log.Println("# Send ping to " + c.GetDeviceId() + " success.  #")
+					}
+
+
+			}
+		} else {
+			hub.unregister <- c
+			log.Println("# Connection lost    #")
 		}
 	}
 }
