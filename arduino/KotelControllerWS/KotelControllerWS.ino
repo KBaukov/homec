@@ -1,7 +1,6 @@
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 #include <OneWire.h>
-#include <rBase64.h>
 
 
 #define POWER_MODE  0
@@ -13,24 +12,23 @@
 
 #ifdef ESP8266
 extern "C" {
-  #include "user_interface.h"
+#include "user_interface.h"
 }
 #endif
 
 // SETTINGS
-OneWire  ds1(D2);  // on pin D4 (a 4.7K resistor is necessary)
-OneWire  ds2(D2);  // on pin D3 (a 4.7K resistor is necessary)
+OneWire  ds1(D4);  // on pin D4 (a 4.7K resistor is necessary)
+OneWire  ds2(D3);  // on pin D3 (a 4.7K resistor is necessary)
 //File hcFile;
 WebSocketsClient webSocket;
-rBase64generic<250> encoder;
 
 // Const
 const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 //const char* wlan_ssid           = "Home";
-//const char* wlan_password       = "4r3e2w1q";
-const char* ws_host               = "192.168.0.114";
-const int   ws_port               = 443;
+//const char* wlan_password       = "q1w2e3r4";
+const char* ws_host               = "192.168.43.175";
+const int   ws_port               = 8085;
 //const char* ws_host             = "alabino.ddns.net";
 //const int   ws_port             = 443;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
@@ -58,14 +56,11 @@ int destKw = 0;
 String currentStage = "0_0";
 
 String ctrlComm = "";
-long wait = 810; // 81.0 - 1 sec
-float k = 81.0;
+long wait = 994;
 //long wait = 6000;
 long count = 0;
 long pressDuration = 100;
 int statusId = 0;
-
-int period = 10;
 
 bool isSessionStart = false;
 
@@ -76,6 +71,15 @@ bool isSessionStart = false;
 void setup() {
   Serial.begin(115200);
   Serial.println();//Serial.println();Serial.println();
+
+  /*if (!SD.begin(4)) {
+    Serial.println("initialization failed!");
+    return;
+  } else {
+    parseDestData(
+      readKotelData()
+    );
+  }*/
 
   pinMode(LEFT_BUTT, OUTPUT);
   pinMode(RIGT_BUTT, OUTPUT);
@@ -109,43 +113,30 @@ void setup() {
   webSocket.onEvent(webSocketEvent);
 
   Serial.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-  webSocket.loop();
-  delay(500);
-  webSocket.loop();
   delay(1000);
 
-  Serial.print("Connected to server: ");
+  //DEBUG_WEBSOCKETS("###############################################################");
 }
 
 void loop() {
-  //long b = micros();
+
   webSocket.loop();
-  
-  if (statusId == 0 ) {
-    Serial.print(".");
-    //Serial.print(statusId);
-    delay(100);
-  }
-  
-  
-  
+
+
+
   //Serial.print("statusId=");
   //Serial.print(statusId);
   //Serial.print(";  count=");
   //Serial.println(count);
 
   if (statusId == 1 && count >= wait ) {
-    
-    
-    //Serial.println("======================================================================================");
-    //tp = random(100, 800) / 10.0; 
-    tp = ttRead(ds1);//+2;
-    //to = random(100, 800) / 10.0; 
-    to = ttRead(ds2);
+    Serial.println("======================================================================================");
+    tp = 36.79; //ttRead(ds1);//+2;
+    to = 27.23; //ttRead(ds2);
     kw = 11; //
     pr = 2.34; //
-    //Serial.print("tp="); Serial.print(tp); Serial.print("  ");
-    //Serial.print("to="); Serial.println(to);
+    Serial.print("tp="); Serial.print(tp); Serial.print("  ");
+    Serial.print("to="); Serial.println(to);
 
     String msg = "{\"action\":\"datasend\", \"type\":\"koteldata\", \"data\":{ \"deviceId\":\"" + deviceId + "\", "
                  + "\"to\":" + to + ", "
@@ -156,11 +147,13 @@ void loop() {
                  + " } }";
 
     sendMessage(msg);
-    //waitT(b);
+
     count = 0;
   } else {
     count++;
   }
+
+
 
   /*if (tp < destTc) {
     digitalWrite(EXTC_BUTT, LOW);
@@ -172,14 +165,6 @@ void loop() {
 
   delay(10);
 }
-
-/*void waitT(long bb) {
-  long e = micros();
-
-  long ww = round(period * 1000 - (e - bb)/1000);
-  
-  delay(ww);
-}*/
 
 void sendMessage(String & msg) {
   webSocket.sendTXT(msg.c_str(), msg.length());
@@ -197,10 +182,10 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     case WStype_CONNECTED: {
         Serial.printf("[WSc] Connected to url: %s\n",  payload);
         statusId = 1;
-        String msg = "{\"action\":\"connect\",\"success\":true,\"sender\":\"" + deviceId + "\"}";
+        String msg = "{\"action\":\"connect\",\"success\":true,\"deviceId\":\"" + deviceId + "\"}";
         sendMessage(msg);
         delay(500);
-        msg = "{\"action\":\"getLastValues\",\"type\":\"koteldata\"}";
+        msg = "{\"action\":\"getDestValues\",\"type\":\"koteldata\"}";
         sendMessage(msg);
       }
       break;
@@ -209,56 +194,32 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         Serial.printf("[WSc] reciv message: %s\n", payload);
 
         if (text.indexOf("action:connect") > -1) {
+
           Serial.println("[WSc] Connected to server successful");
-          String msg = "{\"action\":\"getLastValues\",\"type\":\"koteldata\"}";
-          sendMessage(msg);
-        } else if (text.indexOf("\"action\":\"setLastValues\"") > -1) {
-          parseDestData(text);
-          String ansver = "{\"action\":\"setLastValues\", \"success\":true}";
-          sendMessage(ansver);
-         } else if (text.indexOf("sessionStart") > -1) {
-          String sender = parseData(text, "sender");
-          String hash =   parseData(text, "hash"); 
-          String user =   parseData(text, "user");  
-          String rMsg = "";       
-          Serial.println("incoming hash:"+hash);
-          if (isSessionStart) {
-            rMsg = "{\"action\":\"sessionStart\",\"success\":false,\"msg\":\"session alredy started:device is busy\",\"hash\":\""+hash+"\"}";
-          } else {
-            isSessionStart = true;
-            rMsg = "{\"action\":\"sessionStart\",\"success\":true,\"hash\":\""+hash+"\"}";            
-          }
-          String msg = "{\"action\":\"resend\",\"recipient\":\""+sender+"\",\"msg\":\""+b64encode(rMsg)+"\"}";
-          sendMessage(msg);
-          
-        } else if (text.indexOf("sessionStop") > -1) {
-          String sender = parseData(text, "sender");
-          String hash =   parseData(text, "hash");
-          isSessionStart = false;
-          String rMsg = "{\"action\":\"sessionStop\",\"success\":true,\"hash\":\""+hash+"\"}";
-          String msg = "{\"action\":\"resend\",\"recipient\":\""+sender+"\",\"msg\":\""+b64encode(rMsg)+"\"}";
-          sendMessage(msg);
-        } else if (text.indexOf("pessButton") > -1) {
-          String butt =   parseData(text, "butt");
-          String sender = parseData(text, "sender");
-          String hash =   parseData(text, "hash");
-          String stage =  parseData(text, "stage");
-          presKey(butt);
-          String rMsg = "{\"success\":true,\"butt\":\""+butt+"\",\"hash\":\""+hash+"\"}";
-          String msg = "{\"action\":\"resend\",\"recipient\":\""+sender+"\",\"msg\":\""+b64encode(rMsg)+"\"}";
-          sendMessage(msg);
-          currentStage = stage;
+          //delay(1000);
         } else if (text.indexOf("\"action\":\"setDestValues\"") > -1) {
           parseDestData(text);
           String ansver = "{\"action\":\"setDestValues\", \"success\":true}";
-          sendMessage(ansver);          
+          sendMessage(ansver);
+         } else if (text.indexOf("sessoinStart") > -1) {
+          if (isSessionStart) {
+            String msg = "{\"action\":\"sessionStart\",\"success\":false,\"msg\":\"кто-то уже управляет котлом\"}";
+            sendMessage(msg);
+          } else {
+            isSessionStart = true;
+            String msg = "{\"action\":\"sessionStart\",\"success\":true,\"msg\":\"\"}";
+            sendMessage(msg);
+          }
+        } else if (text.indexOf("sessoinStop") > -1) {
+          isSessionStart = false;
+          String msg = "{\"action\":\"sessionStop\",\"success\":true,\"msg\":\"\"}";
+          sendMessage(msg);
+        } else if (text.indexOf("pessButton") > -1) {
+          char butt = parseButtData(text);
+          presKey(butt);
+
         } else if (text.indexOf("setDelay") > -1) {
-          String d = parseData(text, "delay");
-          period = d.toInt();
-          wait = round(k*period);
-          Serial.println("Change period to: "+d);
-          //Serial.println(d);
-          
+
         } else if (text.indexOf("reset") > -1) {
           resetDevice();
         }
@@ -299,6 +260,18 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   return content;
 }*/
 
+void parseData(String json) {
+  StaticJsonBuffer<100> jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(json);
+  if (!root.success()) {
+    Serial.println("parseObject() failed");
+    return;
+  }
+  bool succ = root["success"];
+  Serial.println("====================================");
+  Serial.println(succ);
+  Serial.println("====================================");
+}
 
 void parseDestData(String json) {
 
@@ -341,14 +314,18 @@ void parseDestData(String json) {
 
 }
 
-String parseData(String json, String key) {
-  StaticJsonBuffer<500> jsonBuffer;
+char parseButtData(String json) {
+  char cc[2];
+  //Serial.println("Parse Button Data:");
+  StaticJsonBuffer<100> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
   if (!root.success()) {
     Serial.println("parseObject() failed");
-    return "";
+    return 0;
   }
-  return root[key];
+  String butt = root["butt"];
+  butt.toCharArray(cc, 2);
+  return cc[0];
 }
 
 float ttRead(OneWire ds) {
@@ -368,7 +345,6 @@ float ttRead(OneWire ds) {
 
     //return String(temperature)+" C";
   } else {
-    //temperature = random(0, 800) / 10.0;
     // ошибка CRC, отображается ----
     Serial.println("Error while get temp.");
   }
@@ -376,25 +352,9 @@ float ttRead(OneWire ds) {
   return temperature;
 }
 
-String b64encode(String s) {
-  if(encoder.encode(s)==RBASE64_STATUS_OK) {
-    String res = encoder.result();
-    return res; 
-  }
-  return "NaN";  
-}
-String b64decode(String s) {
-  encoder.decode(s);  
-  return encoder.result();  
-}
-
-void presKey(String butt) {
-  char cc[2];
-  
-  butt.toCharArray(cc, 2);
-  //return cc[0]
-  int n = (int) cc[0];
-  Serial.print("Key="); Serial.println(cc[0]);
+void presKey(char k) {
+  int n = (int) k;
+  Serial.print("Key="); Serial.println(k);
   if (n == 76) {
     //Serial.println("Left");
     digitalWrite(LEFT_BUTT, LOW);
@@ -417,5 +377,6 @@ void presKey(String butt) {
 
 void resetDevice() {
   Serial.println("Reset...");
-  parseDestData("{sadasd:asdas}");
+  digitalWrite(RSTPIN, LOW);
+  delay(1000);
 }

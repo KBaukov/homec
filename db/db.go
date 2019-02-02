@@ -32,7 +32,7 @@ const (
 	getKotelDataQuery     = "SELECT DEVICE_ID ,`TO`, TP, KW, PR, DEST_TO, DEST_TP, DEST_KW, DEST_PR, DEST_TC, STAGE FROM hc.kotel"
 	updKotelDevIdQuery    = `UPDATE hc.kotel SET device_id = ? WHERE 1`
 	updKotelDestDataQuery = "UPDATE hc.kotel SET dest_to=?, dest_tp=?, dest_kw=?, dest_pr=?, dest_tc=?, stage=? WHERE 1"
-	updKotelMeshDataQuery = "UPDATE hc.kotel SET `to`= ?, tp= ?, kw= ?, pr= ?, stage=? WHERE 1"
+	updKotelMeshDataQuery = "UPDATE hc.kotel SET `to`= ?, tp= ?, kw= ?, pr= ? WHERE 1"
 	addKotelStatDataQuery = "INSERT INTO hc.kotel_data (`to`, tp, kw, pr, date) VALUES (?,?,?,?,now())"
 	//getKotelDataQuery = `SELECT * FROM hc.kotel_data WHERE 1 ORDER BY date DESC LIMIT 1`
 	getKotelDataStat  = `SELECT * FROM hc.kotel_data WHERE date BETWEEN STR_TO_DATE(?, '%Y-%m-%d %H:%i:%s') AND STR_TO_DATE(?, '%Y-%m-%d %H:%i:%s') ORDER BY date desc limit ?`
@@ -77,7 +77,7 @@ type DbService interface {
 
 	GetKotelID() (int, string, error)
 	GetKotelData() (ent.KotelData, error)
-	UpdKotelMeshData(to float64, tp float64, kw int, pr float64, stage string) error
+	UpdKotelMeshData(to float64, tp float64, kw int, pr float64) error
 	UpdKotelDestData(destto float64, desttp float64, destkw int, destpr float64, destc float64, stage string) error
 	AddKotelStatData(to float64, tp float64, kw int, pr float64) (bool, error)
 	GetKotelDataStat(from string, to string, count int) ([]ent.KotelStatData, error)
@@ -408,7 +408,7 @@ func (db Database) UpdKotelDestData(destto float64, desttp float64, destkw int, 
 	return err
 }
 
-func (db Database) UpdKotelMeshData(to float64, tp float64, kw int, pr float64, stage string) error {
+func (db Database) UpdKotelMeshData(to float64, tp float64, kw int, pr float64) error {
 
 	stmt, err := db.Conn.Prepare(updKotelMeshDataQuery)
 	if err != nil {
@@ -416,7 +416,7 @@ func (db Database) UpdKotelMeshData(to float64, tp float64, kw int, pr float64, 
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(to, tp, kw, pr, stage)
+	_, err = stmt.Exec(to, tp, kw, pr)
 	if err != nil {
 		return err
 	}

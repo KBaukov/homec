@@ -2,14 +2,14 @@ package main
 
 import (
 	"flag"
+	"github.com/KBaukov/homec/config"
+	"github.com/KBaukov/homec/db"
+	"github.com/KBaukov/homec/handle"
 	"log"
 	"net"
 	"net/http"
 	"os"
 
-	"github.com/KBaukov/homec/config"
-	"github.com/KBaukov/homec/db"
-	"github.com/KBaukov/homec/handle"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -45,11 +45,11 @@ func main() {
 		db.Conn.SetMaxIdleConns(5);
 		stats := db.Conn.Stats().OpenConnections
 		log.Printf("Open connections:", stats)
-		_, err = db.Conn.Exec("SET AUTOCOMMIT=1;")
-		if err != nil {
-			log.Printf("Не удалось установить настройки базы данных: %v", err)
-			return;
-		}
+		//_, err = db.Conn.Exec("SET AUTOCOMMIT=1;")
+		//if err != nil {
+		//	log.Printf("Не удалось установить настройки базы данных: %v", err)
+		//	return;
+		//}
 		defer db.Conn.Close();
 	}
 
@@ -88,5 +88,6 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("redirect to: %s", listenString)
 	http.Redirect(w, r, listenString,
+		// see @andreiavrammsd comment: often 307 > 301
 		http.StatusTemporaryRedirect)
 }

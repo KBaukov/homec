@@ -1,3 +1,6 @@
+#include <Arduino.h>
+#include <Hash.h>
+#include <ESP8266WiFi.h>
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 #include <Wire.h>
@@ -25,7 +28,7 @@ Adafruit_SHT31 sht30 = Adafruit_SHT31();
 const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 
-const char* ws_host               = "192.168.0.114";
+const char* ws_host               = "alabino.ddns.net";
 const int   ws_port               = 443;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
 
@@ -42,9 +45,9 @@ byte bufData[9];  // буфер данных
 float temp = 0;
 float hum  = 0;
 
-long wait = 810;
-int period = 10;
-long count = 800;
+long wait = 595;
+long count = 560;
+long pressDuration = 100;
 int statusId = 0;
 
 
@@ -81,12 +84,8 @@ void setup() {
 }
 
 void loop() {
-  webSocket.loop();
-  if (statusId == 0 ) {
-    Serial.print(".");
-    //Serial.print(statusId);
-    delay(100);
-  }
+
+  
 /*
   temp = 25.55; hum = 35.55;
   Serial.print("Temp="); Serial.print(temp);
@@ -96,10 +95,9 @@ void loop() {
 */
   
   if(statusId == 1 && count >= wait ) {
-    //temp = sht30.readTemperature(); 
-    //hum  = sht30.readHumidity();
-    temp = random(100,800) / 10; //22.35; 
-    hum = random(100,800) / 10;  //54.56;
+    temp = sht30.readTemperature(); 
+    hum  = sht30.readHumidity();
+    //temp = 28.35; hum = 54.56;
     if (isnan(hum) || isnan(temp)) {    
       Serial.println("SHT Error!");
     } else {
@@ -117,12 +115,23 @@ void loop() {
     sendMessage(msg);
 
     count = 0;
-  } else {
-    count++;
   }
 
-   //Serial.println("====================================================");
-   delay(10);
+  Serial.print("%; statusId="); Serial.print(statusId);
+  Serial.print("; count="); Serial.println(count);
+/*  
+   if(USE_SERIAL.available()>0) {
+    String msg = "";
+     while (USE_SERIAL.available() > 0) {
+       msg += (char) USE_SERIAL.read();
+     }
+     sendMessage(msg);
+   }
+*/    
+   count++;
+   webSocket.loop();
+   Serial.println("====================================================");
+   delay(100);
 }
 
 // FUNCTIONS
@@ -135,7 +144,7 @@ void sendMessage(String & msg) {
 }
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
-   // USE_SERIAL.print("EventType:"); USE_SERIAL.println(type);
+    USE_SERIAL.print("EventType:"); USE_SERIAL.println(type);
     
     switch (type) {
         case WStype_DISCONNECTED:
@@ -150,23 +159,23 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
             }
             break;
         case WStype_TEXT: {
+
                 String text = (char*) payload;
-                Serial.printf("[WSc] reciv message: %s\n", payload);
-        
-                if (text.indexOf("action:connect") > -1) {
-                  Serial.println("[WSc] Connected to server successful");   
+                USE_SERIAL.printf("[WSc] get text: %s\n", payload);
+
+                if (text.indexOf("action:connect")>-1) {
+
+                    USE_SERIAL.println("[WSc] Connected to server successful");
+                    delay(1000);
+                    
                 } else if(text.indexOf("setDestination")>-1) {
                   
                 } else if(text.indexOf("pessButton")>-1) {
                     
-                } else if (text.indexOf("setDelay") > -1) {
-                  String d = parseData(text, "delay");
-                  period = d.toInt();
-                  wait = round(99.4*period);
-                  Serial.println("Change period to: "+d);
+                } else if(text.indexOf("setDelay")>-1) {
                   
-                } else if (text.indexOf("reset") > -1) {
-                  resetDevice();
+                } else if(text.indexOf("reset")>-1) {
+                  
                 }
 
                 break;
@@ -182,34 +191,89 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 
 }
 
-String parseData(String json, String key) {
-  StaticJsonBuffer<500> jsonBuffer;
+void parseData(String json) {
+  StaticJsonBuffer<100> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
   if (!root.success()) {
     Serial.println("parseObject() failed");
-    return "";
+    return;
   }
-  return root[key];
+  bool succ = root["success"];
+  Serial.println("====================================");
+  Serial.println(succ);
+  Serial.println("====================================");
 }
 
 void parseDestData(String json) {
-
-  StaticJsonBuffer<400> jsonBuffer;
+  StaticJsonBuffer<300> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
   if (!root.success()) {
     Serial.println("parseObject() failed");
-    Serial.println("#### " + json);
     return;
   }
-  float destTp = atof(root["destTp"]);
-  float destTo = atof(root["destTo"]); 
-  float destTc = atof(root["destTc"]); 
-  float destPr = atof(root["destPr"]);
-  int destKw = atoi(root["destKw"]);
-  String stage = root["stage"];
+  bool succ = root["success"];
+  Serial.println("====================================");
+  Serial.println(succ);
+  Serial.println("====================================");
 }
 
-void resetDevice() {
-  Serial.println("Reset...");
-  parseDestData("{sadasd:asdas}");
+void parseDeviceData(String json) {
+  Serial.println("Parse Device Data:");
+  StaticJsonBuffer<600> jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(json);
+  if (!root.success()) {
+    Serial.println("parseObject() failed");
+    return;
+  }
+  bool succ = root["success"];
+  int n = root["data"].size();
+  Serial.print("Count devices: "); Serial.println(n);
+  for(int i=0; i<n; i++) {
+    String ip = root["data"][i]["ip"];
+    String type = root["data"][i]["type"];
+    Serial.print("Type: "); Serial.print(type);
+    Serial.print("; Ip: "); Serial.println(ip);
+    //devIp[i] = ip; devType[i] = type;    
+  }
+
 }
+
+char parseButtData(String json) {
+  char cc[2];
+  //Serial.println("Parse Button Data:");
+  StaticJsonBuffer<100> jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(json);
+  if (!root.success()) {
+    Serial.println("parseObject() failed");
+    return 0;
+  }
+  String butt = root["butt"];
+  butt.toCharArray(cc, 2);
+  return cc[0];
+}
+
+/*
+float ttRead(OneWire ds) {
+  float temperature;
+  ds.reset();  // сброс шины
+  ds.write(0xCC, POWER_MODE); // пропуск ROM
+  ds.write(0x44, POWER_MODE); // инициализация измерения
+  delay(900);  // пауза 0,9 сек
+  ds.reset();  // сброс шины
+  ds.write(0xCC, POWER_MODE); // пропуск ROM  
+  ds.write(0xBE, POWER_MODE); // команда чтения памяти датчика  
+  ds.read_bytes(bufData, 9);  // чтение памяти датчика, 9 байтов
+
+  if ( OneWire::crc8(bufData, 8) == bufData[8] ) {  // проверка CRC
+    // данные правильные
+    temperature=  (float)((int)bufData[0] | (((int)bufData[1]) << 8)) * 0.0625 + 0.03125; 
+  
+    //return String(temperature)+" C";    
+  } else {  
+    // ошибка CRC, отображается ----
+    USE_SERIAL.println("Error");         
+  }    
+
+  return temperature;
+}
+*/

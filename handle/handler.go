@@ -427,18 +427,23 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 			if err != nil || kotelName == "" {
 				err = errors.New("Котел не найден")
 			}
-			ws := WsConnections[kotelName].Connection
-			if ws == nil {
+
+			conn := hub.getConnByDevId(kotelName)
+			//ws := WsConnections[kotelName].Connection
+			if conn == nil {
 				err = errors.New("Сессия не активна")
 			} else {
 				msg = "{\"action\":\"setDestValues\",\"destTo\":" + p2 + ",\"destTp\":" + p1 + ",\"destTc\":" +
 					p5 + ",\"destPr\":" + p4 + ",\"destKw\":" + p3 + ",\"stage\":\"" + stage + "\"}";
 
 				log.Printf("[WS]:send to %s: %s", kotelName, msg)
-				err = ws.WriteMessage(1, []byte(msg))
-				if err != nil {
-					log.Println("Sending message error:", err)
-				}
+
+				conn.send <- []byte(msg)
+
+				//err = conn.write(websocket.TextMessage, []byte(msg))
+				//if err != nil {
+				//	log.Println("Sending message error:", err)
+				//}
 			}
 
 			err = db.UpdKotelDestData(destto, desttp, destkw, destpr, desttc, stage)
