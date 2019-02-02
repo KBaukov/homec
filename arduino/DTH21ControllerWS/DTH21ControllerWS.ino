@@ -1,17 +1,12 @@
 #include <ESP8266WiFi.h>
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
-#include <Wire.h>
-#include "Adafruit_SHT31.h"
+#include <DHT.h>
+#include <Wire.h>  // Include Wire if you're using I2C
 
-#define POWER_MODE  0 // режим питания, 0 - внешнее, 1 - паразитное
 #define PIN_RESET 255  //
-#define DC_JUMPER 0  // I2C Addres: 0 - 0x3C, 1 - 0x3D
-#define SDAPIN 0
-#define SCLPIN 2
+#define DHTPIN D4
 #define USE_SERIAL Serial
-#define POWER_MODE  0
-//#define EXTC_BUTT  D1
 
 #ifdef ESP8266
 extern "C" {
@@ -21,7 +16,7 @@ extern "C" {
 
 // SETTINGS
 
-Adafruit_SHT31 sht30 = Adafruit_SHT31();
+DHT dht(DHTPIN, DHT21);
 
 const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
@@ -38,8 +33,6 @@ const char* headers =  (const char *) headersString.c_str();
 
 WebSocketsClient webSocket;
 
-byte bufData[9];  // буфер данных
-
 float temp = 0;
 float hum  = 0;
 
@@ -55,28 +48,21 @@ void setup() {
     USE_SERIAL.begin(115200);
     USE_SERIAL.println();USE_SERIAL.println();USE_SERIAL.println();
 
-    if (! sht30.begin(0x45)) {   // Set to 0x45 for alternate i2c addr
-      Serial.println("Couldn't find SHT31");
-      while (1) delay(1);
-    }
-
     // connect to WiFi
     USE_SERIAL.print("Logging into WLAN: "); 
     Serial.print(wlan_ssid); 
     Serial.print(" ...");
     
     WiFi.mode(WIFI_STA);
-    WiFi.begin(wlan_ssid, wlan_password);
+  WiFi.begin(wlan_ssid, wlan_password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println(" success.");
+  Serial.print("IP: "); Serial.println(WiFi.localIP());
 
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        USE_SERIAL.print(".");
-    }
-    USE_SERIAL.println(" success.");
-    USE_SERIAL.print("IP: "); USE_SERIAL.println(WiFi.localIP());
-
-
-    // connect to websocket
+  // connect to websocket
   webSocket.beginSSL(ws_host, ws_port, stompUrl);
   webSocket.setExtraHeaders(headers);
   webSocket.onEvent(webSocketEvent);
@@ -87,25 +73,28 @@ void setup() {
   webSocket.loop();
   delay(1000);
 
-  Serial.print("Connected to server: "); 
+  Serial.print("Connected to server: ");    
 }
 
 void loop() {
-  
+
   webSocket.loop();
   
   if (statusId == 0 ) {
     Serial.print(".");
     delay(100);
-  } else if(statusId == 1 && count >= wait ) {
-    //temp = sht30.readTemperature(); hum  = sht30.readHumidity();
-    temp = random(100, 800) / 10.0; hum = random(100, 800) / 10.0;
+  } else if (statusId == 1 && count >= wait ) {
+    temp = dht.readTemperature(); hum = dht.readHumidity();
+    //temp = random(100, 800) / 10.0; hum = random(100, 800) / 10.0;
     if (isnan(hum) || isnan(temp)) {    
-      Serial.println("SHT Error!");
+      Serial.println("DHT Error!");
     } else {
       Serial.print("Temp="); Serial.print(temp);
       Serial.print("C; Humidity="); Serial.print(hum); 
+      Serial.print("%; statusId="); Serial.print(statusId);
+      Serial.print("; count="); Serial.println(count);
     }
+   
     String msg = "{\"action\":\"datasend\", \"type\":\"roomdata\", \"data\":{ \"device_id\":\""+deviceId+"\", "
       + "\"sensor_type\":\"tempHym\", "
       + "\"t\":" + temp +", "
@@ -117,7 +106,7 @@ void loop() {
     sendMessage(msg);
 
     count = 0;
-  }    
+  }     
   count++;
   delay(10);
 }
@@ -151,7 +140,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
           if (text.indexOf("action:connect")>-1) {
               USE_SERIAL.println("[WSc] Connected to server successful");
               delay(100);
-                
+              
           } else if (text.indexOf("setDelay") > -1) {
             String d = parseData(text, "delay");
             Serial.println("Change period to: "+d);            
@@ -159,16 +148,16 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
           } else if (text.indexOf("reset") > -1) {
             resetDevice();
           }   
-
           break;
+          
         }
         case WStype_BIN:
-            USE_SERIAL.printf("[WSc] get binary length: %u\n", length);
-            hexdump(payload, length);
-
-            // send data to server
-            // webSocket.sendBIN(payload, length);
-            break;
+          USE_SERIAL.printf("[WSc] get binary length: %u\n", length);
+          hexdump(payload, length);
+  
+          // send data to server
+          // webSocket.sendBIN(payload, length);
+          break;
     }
 
 }

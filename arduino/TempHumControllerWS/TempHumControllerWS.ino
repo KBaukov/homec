@@ -25,13 +25,13 @@ extern "C" {
 
 // SETTINGS
 
-DHT dht(DHTPIN, DHT11);
+DHT dht(DHTPIN, DHT21);
 
 const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 
-const char* ws_host               = "192.168.43.175";
-const int   ws_port               = 8085;
+const char* ws_host               = "strobo.ddns.net";
+const int   ws_port               = 443;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
 
 String deviceId = wifi_station_get_hostname();
@@ -84,8 +84,8 @@ void setup() {
 
 void loop() {
 
-  //temp = dht.readTemperature(); hum = dht.readHumidity();
-  temp = 28.35; hum = 54.56;
+  temp = dht.readTemperature(); hum = dht.readHumidity();
+  //temp = 28.35; hum = 54.56;
   if (isnan(hum) || isnan(temp)) {    
     Serial.println("DHT Error!");
   } else {

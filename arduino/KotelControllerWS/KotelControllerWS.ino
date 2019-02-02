@@ -1,6 +1,7 @@
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 #include <OneWire.h>
+#include <rBase64.h>
 
 
 #define POWER_MODE  0
@@ -12,7 +13,7 @@
 
 #ifdef ESP8266
 extern "C" {
-#include "user_interface.h"
+  #include "user_interface.h"
 }
 #endif
 
@@ -21,14 +22,15 @@ OneWire  ds1(D4);  // on pin D4 (a 4.7K resistor is necessary)
 OneWire  ds2(D3);  // on pin D3 (a 4.7K resistor is necessary)
 //File hcFile;
 WebSocketsClient webSocket;
+rBase64generic<250> encoder;
 
 // Const
 const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 //const char* wlan_ssid           = "Home";
-//const char* wlan_password       = "q1w2e3r4";
-const char* ws_host               = "192.168.43.175";
-const int   ws_port               = 8085;
+//const char* wlan_password       = "4r3e2w1q";
+const char* ws_host               = "strobo.ddns.net";
+const int   ws_port               = 443;
 //const char* ws_host             = "alabino.ddns.net";
 //const int   ws_port             = 443;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
@@ -56,11 +58,14 @@ int destKw = 0;
 String currentStage = "0_0";
 
 String ctrlComm = "";
-long wait = 994;
+long wait = 994; // 81.0 - 1 sec
+float k = 99.4;
 //long wait = 6000;
-long count = 0;
+long count = 900;
 long pressDuration = 100;
 int statusId = 0;
+
+float period = 10.0;
 
 bool isSessionStart = false;
 
@@ -71,15 +76,6 @@ bool isSessionStart = false;
 void setup() {
   Serial.begin(115200);
   Serial.println();//Serial.println();Serial.println();
-
-  /*if (!SD.begin(4)) {
-    Serial.println("initialization failed!");
-    return;
-  } else {
-    parseDestData(
-      readKotelData()
-    );
-  }*/
 
   pinMode(LEFT_BUTT, OUTPUT);
   pinMode(RIGT_BUTT, OUTPUT);
@@ -113,31 +109,30 @@ void setup() {
   webSocket.onEvent(webSocketEvent);
 
   Serial.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+  webSocket.loop();
+  delay(500);
+  webSocket.loop();
   delay(1000);
 
-  //DEBUG_WEBSOCKETS("###############################################################");
+  Serial.print("Connected to server: ");
 }
 
 void loop() {
-
   webSocket.loop();
-
-
-
-  //Serial.print("statusId=");
-  //Serial.print(statusId);
-  //Serial.print(";  count=");
-  //Serial.println(count);
+  
+  if (statusId == 0 ) {
+    Serial.print(".");
+    delay(100);
+  }
 
   if (statusId == 1 && count >= wait ) {
-    Serial.println("======================================================================================");
-    tp = 36.79; //ttRead(ds1);//+2;
-    to = 27.23; //ttRead(ds2);
+    //Serial.println("======================================================================================");
+    tp = random(100, 800) / 10.0; 
+    //tp = ttRead(ds1);//+2;
+    to = random(100, 800) / 10.0; 
+    //to = ttRead(ds2);
     kw = 11; //
     pr = 2.34; //
-    Serial.print("tp="); Serial.print(tp); Serial.print("  ");
-    Serial.print("to="); Serial.println(to);
-
     String msg = "{\"action\":\"datasend\", \"type\":\"koteldata\", \"data\":{ \"deviceId\":\"" + deviceId + "\", "
                  + "\"to\":" + to + ", "
                  + "\"tp\":" + tp + ", "
@@ -147,28 +142,15 @@ void loop() {
                  + " } }";
 
     sendMessage(msg);
-
     count = 0;
   } else {
     count++;
   }
-
-
-
-  /*if (tp < destTc) {
-    digitalWrite(EXTC_BUTT, LOW);
-    //Serial.println("Relay is on");
-  } else {
-    digitalWrite(EXTC_BUTT, HIGH);
-    //Serial.println("Relay is off");
-  }*/
-
   delay(10);
 }
 
 void sendMessage(String & msg) {
   webSocket.sendTXT(msg.c_str(), msg.length());
-  //lastQuery = msg;
   Serial.print("[Wsc] Send message to server: "); Serial.println(msg);
 }
 
@@ -182,10 +164,10 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     case WStype_CONNECTED: {
         Serial.printf("[WSc] Connected to url: %s\n",  payload);
         statusId = 1;
-        String msg = "{\"action\":\"connect\",\"success\":true,\"deviceId\":\"" + deviceId + "\"}";
+        String msg = "{\"action\":\"connect\",\"success\":true,\"sender\":\"" + deviceId + "\"}";
         sendMessage(msg);
         delay(500);
-        msg = "{\"action\":\"getDestValues\",\"type\":\"koteldata\"}";
+        msg = "{\"action\":\"getLastValues\",\"type\":\"koteldata\"}";
         sendMessage(msg);
       }
       break;
@@ -194,32 +176,51 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         Serial.printf("[WSc] reciv message: %s\n", payload);
 
         if (text.indexOf("action:connect") > -1) {
-
           Serial.println("[WSc] Connected to server successful");
-          //delay(1000);
+        } else if (text.indexOf("\"action\":\"setLastValues\"") > -1) {
+          parseDestData(text);
+          String ansver = "{\"action\":\"setLastValues\", \"success\":true}";
+          sendMessage(ansver);
+         } else if (text.indexOf("sessionStart") > -1) {
+          String sender = parseData(text, "sender");
+          String hash =   parseData(text, "hash"); 
+          String user =   parseData(text, "user");  
+          String rMsg = "";       
+          Serial.println("incoming hash:"+hash);
+          if (isSessionStart) {
+            rMsg = "{\"action\":\"sessionStart\",\"success\":false,\"msg\":\"session alredy started:device is busy\",\"hash\":\""+hash+"\"}";
+          } else {
+            isSessionStart = true;
+            rMsg = "{\"action\":\"sessionStart\",\"success\":true,\"hash\":\""+hash+"\"}";            
+          }
+          String msg = "{\"action\":\"resend\",\"recipient\":\""+sender+"\",\"msg\":\""+b64encode(rMsg)+"\"}";
+          sendMessage(msg);
+          
+        } else if (text.indexOf("sessionStop") > -1) {
+          String sender = parseData(text, "sender");
+          String hash =   parseData(text, "hash");
+          isSessionStart = false;
+          String rMsg = "{\"action\":\"sessionStop\",\"success\":true,\"hash\":\""+hash+"\"}";
+          String msg = "{\"action\":\"resend\",\"recipient\":\""+sender+"\",\"msg\":\""+b64encode(rMsg)+"\"}";
+          sendMessage(msg);
+        } else if (text.indexOf("pessButton") > -1) {
+          String butt =   parseData(text, "butt");
+          String sender = parseData(text, "sender");
+          String hash =   parseData(text, "hash");
+          String stage =  parseData(text, "stage");
+          presKey(butt);
+          String rMsg = "{\"success\":true,\"butt\":\""+butt+"\",\"hash\":\""+hash+"\"}";
+          String msg = "{\"action\":\"resend\",\"recipient\":\""+sender+"\",\"msg\":\""+b64encode(rMsg)+"\"}";
+          sendMessage(msg);
+          currentStage = stage;
         } else if (text.indexOf("\"action\":\"setDestValues\"") > -1) {
           parseDestData(text);
           String ansver = "{\"action\":\"setDestValues\", \"success\":true}";
-          sendMessage(ansver);
-         } else if (text.indexOf("sessoinStart") > -1) {
-          if (isSessionStart) {
-            String msg = "{\"action\":\"sessionStart\",\"success\":false,\"msg\":\"кто-то уже управляет котлом\"}";
-            sendMessage(msg);
-          } else {
-            isSessionStart = true;
-            String msg = "{\"action\":\"sessionStart\",\"success\":true,\"msg\":\"\"}";
-            sendMessage(msg);
-          }
-        } else if (text.indexOf("sessoinStop") > -1) {
-          isSessionStart = false;
-          String msg = "{\"action\":\"sessionStop\",\"success\":true,\"msg\":\"\"}";
-          sendMessage(msg);
-        } else if (text.indexOf("pessButton") > -1) {
-          char butt = parseButtData(text);
-          presKey(butt);
-
+          sendMessage(ansver);          
         } else if (text.indexOf("setDelay") > -1) {
-
+          String d = parseData(text, "delay");
+          Serial.println("Change period to: "+d);
+          setPeriod(d);          
         } else if (text.indexOf("reset") > -1) {
           resetDevice();
         }
@@ -229,48 +230,10 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     case WStype_BIN:
       Serial.printf("[WSc] get binary length: %u\n", length);
       hexdump(payload, length);
-
-      // send data to server
-      // webSocket.sendBIN(payload, length);
+      webSocket.sendBIN(payload, length);
       break;
   }
 
-}
-
-
-
-/*String readKotelData() {
-  String content = ""; int i = 0;
-  hcFile = SD.open("kotel.dat");
-  int sz = hcFile.size();
-  if (hcFile) {
-    byte b[sz];
-    Serial.println("kotel.dat:");
-    while (hcFile.available()) {
-      b[i++] =  hcFile.read();
-    }
-    content = String((char*) b).substring(0, sz);
-  } else {
-    Serial.println("Error while reading kotel.data file");
-  }
-  hcFile.close();
-  Serial.print("Size: ");
-  Serial.println(i);
-  Serial.println("Content: " + content);
-  return content;
-}*/
-
-void parseData(String json) {
-  StaticJsonBuffer<100> jsonBuffer;
-  JsonObject& root = jsonBuffer.parseObject(json);
-  if (!root.success()) {
-    Serial.println("parseObject() failed");
-    return;
-  }
-  bool succ = root["success"];
-  Serial.println("====================================");
-  Serial.println(succ);
-  Serial.println("====================================");
 }
 
 void parseDestData(String json) {
@@ -291,41 +254,16 @@ void parseDestData(String json) {
   destKw = atoi(root["destKw"]);
   String stage = root["stage"]; currentStage = stage;
 
-  /*if (SD.exists("kotel.dat")) {
-    //Serial.println("kotel.dat exists.");
-    SD.remove("kotel.dat");
-    hcFile = SD.open("kotel.dat", FILE_WRITE);
-    if (hcFile) {
-      String cont = "{destTo:" + dTo + ",destTp:" + dTp + ",destKw:" + dKw + ",destPr:" + dPr + ",destTc:" + dTc + ",stage:\"" + stage + "\"}";
-      Serial.print("Writing to kotel.dat: " + cont);
-      hcFile.println(cont);
-      // close the file:
-      hcFile.close();
-      Serial.println("done.");
-    } else {
-      // if the file didn't open, print an error:
-      Serial.println("error opening kotel.dat");
-    }
-  } else {
-    Serial.println("kotel.dat doesn't exist.");
-  }*/
-
-
-
 }
 
-char parseButtData(String json) {
-  char cc[2];
-  //Serial.println("Parse Button Data:");
-  StaticJsonBuffer<100> jsonBuffer;
+String parseData(String json, String key) {
+  StaticJsonBuffer<500> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
   if (!root.success()) {
     Serial.println("parseObject() failed");
-    return 0;
+    return "";
   }
-  String butt = root["butt"];
-  butt.toCharArray(cc, 2);
-  return cc[0];
+  return root[key];
 }
 
 float ttRead(OneWire ds) {
@@ -342,9 +280,8 @@ float ttRead(OneWire ds) {
   if ( OneWire::crc8(bufData, 8) == bufData[8] ) {  // проверка CRC
     // данные правильные
     temperature =  (float)((int)bufData[0] | (((int)bufData[1]) << 8)) * 0.0625 + 0.03125;
-
-    //return String(temperature)+" C";
   } else {
+    //temperature = random(0, 800) / 10.0;
     // ошибка CRC, отображается ----
     Serial.println("Error while get temp.");
   }
@@ -352,9 +289,25 @@ float ttRead(OneWire ds) {
   return temperature;
 }
 
-void presKey(char k) {
-  int n = (int) k;
-  Serial.print("Key="); Serial.println(k);
+String b64encode(String s) {
+  if(encoder.encode(s)==RBASE64_STATUS_OK) {
+    String res = encoder.result();
+    return res; 
+  }
+  return "NaN";  
+}
+String b64decode(String s) {
+  encoder.decode(s);  
+  return encoder.result();  
+}
+
+void presKey(String butt) {
+  char cc[2];
+  
+  butt.toCharArray(cc, 2);
+  //return cc[0]
+  int n = (int) cc[0];
+  Serial.print("Key="); Serial.println(cc[0]);
   if (n == 76) {
     //Serial.println("Left");
     digitalWrite(LEFT_BUTT, LOW);
@@ -375,8 +328,16 @@ void presKey(char k) {
   }
 }
 
+void setPeriod(String val) {
+  unsigned char* buf = new unsigned char[10];
+  val.getBytes(buf, 10, 0);  
+  const char *val2 = (const char*)buf;
+  period = atof(val2);
+  wait = round(k*period);
+}
+
 void resetDevice() {
-  Serial.println("Reset...");
-  digitalWrite(RSTPIN, LOW);
-  delay(1000);
+  Serial.println("Reset..."); 
+  const char *rr;
+  Serial.println(atof(rr));
 }
