@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"github.com/KBaukov/homec/config"
 	"github.com/KBaukov/homec/db"
 	"github.com/KBaukov/homec/handle"
@@ -16,14 +15,14 @@ import (
 type Listener chan net.Conn
 
 var (
-	configurationPath = flag.String("config", "config.json", "Путь к файлу конфигурации")
-	Cfg               = config.LoadConfig(*configurationPath)
+	//configurationPath = flag.String("config", "config.json", "Путь к файлу конфигурации")
+	Cfg = config.LoadConfig("config.json")
 )
 
 func init() { }
 
 func main() {
-	flag.Parse()
+	//flag.Parse()
 
 	if Cfg.LoggerPath != "" {
 		// Логер только добавляет данные

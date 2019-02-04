@@ -2,6 +2,8 @@ package handle
 
 import (
 	"encoding/base64"
+	"github.com/KBaukov/homec/config"
+
 	//"bytes"
 	"encoding/json"
 	"github.com/KBaukov/homec/db"
@@ -15,41 +17,68 @@ import (
 )
 
 const (
-	writeWait = 10 * time.Second 		// Time allowed to write a message to the peer.
-	maxMessageSize = 1024  				// Maximum message size allowed from peer.
-	pingWait = 60 * time.Second 		// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second 		// Time allowed to read the next pong message from the peer.
-	//pingPeriod = (pongWait * 9) / 10	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = 	1 * time.Second         // Send pings to peer with this period. Must be less than pongWait.
-	closeGracePeriod = 10 * time.Second	// Time to wait before force close on connection.
-	brPref = "WBR_"
+	//writeWait = 10 * time.Second 		// Time allowed to write a message to the peer.
+//	//maxMessageSize = 1024  				// Maximum message size allowed from peer.
+//	//pingWait = 60 * time.Second 		// Time allowed to read the next pong message from the peer.
+//	//pongWait = 60 * time.Second 		// Time allowed to read the next pong message from the peer.
+//	////pingPeriod = (pongWait * 9) / 10	// Send pings to peer with this period. Must be less than pongWait.
+//	//pingPeriod = 	1 * time.Second         // Send pings to peer with this period. Must be less than pongWait.
+//	//closeGracePeriod = 10 * time.Second	// Time to wait before force close on connection.
+//	////brPref = "WBR_"
 )
 
 func init() {
+	cfg := config.LoadConfig("config.json")
+	WsConfig := cfg.WsConfig
+
+	writeWait = time.Duration(WsConfig.WriteWait) * time.Second                 // Time allowed to write a message to the peer.
+	maxMessageSize = WsConfig.MaxMessageSize                                    // Maximum message size allowed from peer.
+	pingWait = time.Duration(WsConfig.PingWait) * time.Second                   // Time allowed to read the next pong message from the peer.
+	pongWait = time.Duration(WsConfig.PongWait) * time.Second                   // Time allowed to read the next pong message from the peer.
+	pingPeriod = time.Duration(WsConfig.PingPeriod) * time.Second               // Send pings to peer with this period. Must be less than pongWait.
+	closeGracePeriod = time.Duration(WsConfig.CloseGracePeriod) * time.Second	// Time to wait before force close on connection.
+	brPref = WsConfig.BrPref
+	wsAllowedOrigin = WsConfig.WsAllowedOrigin
+
+	log.Println("Config values: ", cfg)
+
 	go hub.run()
 }
 
-//func internalError(ws *websocket.Conn, msg string, err error) {
-//	log.Println(msg, err)
-//	ws.WriteMessage(websocket.TextMessage, []byte("Internal server error."))
-//}
-
 var (
-	WsAllowedOrigin   = "HomeControlApp" //homec.Cfg.WsAllowedOrigin
-	IsControlSessionOpen = false;
-	WsPresButtFlag = false;
+
+	writeWait time.Duration
+	maxMessageSize int64
+	pingWait time.Duration
+	pongWait time.Duration
+	pingPeriod time.Duration
+	closeGracePeriod time.Duration
+	brPref string
+	wsAllowedOrigin   string
+	isControlSessionOpen = false;
 	WsAsignConns	  = make(map[string]string)
 )
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		//deviceOrigin := r.Header.Get("Origin")
-		//if WsAllowedOrigin != deviceOrigin {
-		//	log.Println("Origin not allowed:", deviceOrigin)
-		//	//log.Println("Origin want:", WsAllowedOrigin)
-		//	return false
-		//}
-		return true
+		var user = ent.User{}
+		session := getSession(nil, r)
+		u:=session.Values["user"]
+		if u != nil {
+			user = u.(ent.User)
+		}
+		deviceOrigin := r.Header.Get("Origin")
+		token := r.Header.Get("Sec-WebSocket-Protocol")
+		if wsAllowedOrigin == deviceOrigin || token == user.PASS[10:16]{
+			return true
+		} else {
+			log.Println("Origin not allowed:", deviceOrigin)
+			return false
+		}
+
+	},
+	Error: func(w http.ResponseWriter, r *http.Request, status int, reason error) {
+		log.Println("{WS}:Error:", reason.Error())
 	},
 }
 
@@ -67,7 +96,14 @@ func ServeWs(db db.DbService) http.HandlerFunc {
 
 		log.Println("incoming WS request from: ", devId)
 
-		ws, err = upgrader.Upgrade(w, r, nil)
+		swp := r.Header.Get("Sec-WebSocket-Protocol")
+		if swp!="" {
+			headers := http.Header{"Sec-Websocket-Protocol": {swp}}
+			ws, err = upgrader.Upgrade(w, r, headers)
+		} else {
+			ws, err = upgrader.Upgrade(w, r, nil)
+		}
+
 		if err != nil {
 			log.Println("Upgrade error:", err)
 			return
@@ -245,19 +281,19 @@ func (c *Conn) readPump(db db.DbService) {
 			}
 			if strings.Contains(msg, "\"action\":\"pessButton\"") {
 				if strings.Contains(msg, "true") {
-					WsPresButtFlag = false;
+					//WsPresButtFlag = false;
 				}
 
 			}
 			if strings.Contains(msg, "\"action\":\"sessionStart\"") {
 				if strings.Contains(msg, "true") {
-					IsControlSessionOpen = true;
+					isControlSessionOpen = true;
 				}
 
 			}
 			if strings.Contains(msg, "\"action\":\"sessionStop\"") {
 				if strings.Contains(msg, "true") {
-					IsControlSessionOpen = false;
+					isControlSessionOpen = false;
 				}
 
 			}

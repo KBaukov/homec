@@ -75,6 +75,7 @@ func ServeHome(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/login", 301)
 		} else {
 			user := u.(ent.User)
+			user.PASS = user.PASS[10:16]
 			t, err := template.ParseFiles("./webres/html/main.html")
 			if err != nil {
 				log.Println("Temlate parse error: ", err)

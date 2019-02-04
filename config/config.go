@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-type configuration struct {
+type Configuration struct {
 	DbConnectionString string
 	LoggerPath         string
 	Server             struct {
@@ -16,12 +16,21 @@ type configuration struct {
 		CertificatePath string
 		KeyPath         string
 	}
-	WsAllowedOrigin string
+	WsConfig struct {
+		WsAllowedOrigin string
+		BrPref string
+		PingPeriod int
+		WriteWait int
+		MaxMessageSize int64
+		PingWait int
+		PongWait int
+		CloseGracePeriod int
+	}
 }
 
 // loadConfig читает и парсит настройки сервиса
-func LoadConfig(configPath string) configuration {
-	var config configuration
+func LoadConfig(configPath string) Configuration {
+	var config Configuration
 	file, err := os.Open(configPath)
 	if err != nil {
 		log.Fatalf("Не удалось открыть файл конфигурации: %v", err)

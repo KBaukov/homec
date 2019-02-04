@@ -164,7 +164,7 @@ Ext.define('MapPanel', {
         cmp.chartWin.openWin();
     },
     wssConnUp: function(type, el) {
-        var wss = new WebSocket("wss://"+window.location.host+"/ws");
+        var wss = new WebSocket("wss://"+window.location.host+"/ws", [user.token]);
 
         wss.onopen = function(event) {
             var conn = event.target;
