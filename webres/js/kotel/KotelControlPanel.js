@@ -327,19 +327,19 @@ Ext.define('KotelControlPanel', {
     nextStage: function(butt) { //cmp.mode+'_'+cmp.curSatgeInx;
         var mm=this.mode; var st = st=this.curSatgeInx;
         if(butt=='M') {
-            if(this.mode ==1)  mm=0;
+            if(this.mode==1)  mm=0;
             else mm=1;
         }
         if(butt=='L') {
-            if(this.mode ==0) {
-                if(this.curSatgeInx>0) st=this.curSatgeInx-1;
-                else this.curSatgeInx=3;
+            if(this.mode==0) {
+                if(this.curSatgeInx==0) st=3;
+                else st=this.curSatgeInx-1;
             }
         }
         if(butt=='R') {
             if(this.mode ==0) {
-                if(this.curSatgeInx<3) st=this.curSatgeInx+1;
-                else st=0;
+                if(this.curSatgeInx==3) st=0;
+                else st=this.curSatgeInx+1;
             }
         }
 
