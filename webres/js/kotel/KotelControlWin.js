@@ -36,7 +36,7 @@ Ext.define('KotelControlWin', {
 
         //this.kotelTabPanel   = Ext.create('KotelTabPanel',  {papa: this} );
 
-        this.wss = new WebSocket("wss://"+window.location.host+"/ws");
+        this.wss = new WebSocket("wss://"+window.location.host+"/ws", [user.token]);
         this.wss.onopen = this.wssOnOpen;
         this.wss.onerror = function(error) { console.log("Ошибка " + error.message); };
         this.wss.onclose = function(event) {
@@ -54,46 +54,10 @@ Ext.define('KotelControlWin', {
         event.target.papa.startSession();
     },
     closeWin: function(ev) {
-
         this.kotelControlPanel.setDest();
-
-        // Ext.Ajax.request({
-        //     url: '/api/kotel/sessionstop', scope: this, method: 'POST',
-        //     //params: {user: user.login},
-        //     success: function(response, opts) {
-        //         var ansv = Ext.decode(response.responseText);
-        //
-        //         if(ansv.success) {
-        //
-        //             Ext.TaskManager.stop(this.kotelControlPanel.valuesTask);
-        //
-        //             this.close();
-        //
-        //         } else { error_mes('Ошибка', ansv.msg); }
-        //     },
-        //     failure: function() { }
-        // });
-
     },
     openWin: function() {
         this.ketelChartPanel.loadData();
-        //this.kotelControlPanel.getValues();
-
-
-        // Ext.Ajax.request({
-        //     url: '/api/kotel/sessionstart', scope: this, method: 'POST',
-        //     params: {user: user.login},
-        //     success: function(response, opts) {
-        //         var ansv = Ext.decode(response.responseText);
-        //
-        //         if(ansv.success) {
-        //             Ext.TaskManager.start(this.kotelControlPanel.valuesTask);
-        //             this.show();
-        //
-        //         } else { error_mes('Ошибка', ansv.msg); }
-        //     },
-        //     failure: function() { }
-        // });
     },
     wssOnMessage: function(event) {
         console.log("Получены данные: " + event.data);
