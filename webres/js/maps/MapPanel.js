@@ -177,7 +177,7 @@ Ext.define('MapPanel', {
         wss.onerror = function(error) { console.log("Ошибка " + error.message); };
         wss.onclose = function(event) {
             if (event.wasClean) { console.log('Соединение закрыто чисто'); }
-            else { console.log('Обрыв соединения'); }
+            else { console.log('Обрыв соединения'); AlertBox.msg('error', 'Ошибка сервера !!!', 'Соединение с сервером утеряно'); }
             console.log('Код: ' + event.code + ' причина: ' + event.reason);
             WssConnections.deleteByConn(event.target);
         };
