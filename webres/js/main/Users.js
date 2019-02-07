@@ -142,6 +142,7 @@ Ext.define('Users', {
                           if(ansv.success) {  
                             this.getStore().removeAt(rowIndex);           
                             this.count = this.store.count();
+                            AlertBox.msg('info', "Удаление !!!", 'Пользователь {s} успешно удален', )
                           } else error_mes('Ошибка', ansv.msg);  
                         },
                         failure: function() { this.unmask(); }
@@ -190,13 +191,14 @@ Ext.define('Users', {
                       if(ansv.success) {  
                         this.store.reload();            
                         this.count = this.store.count();
+                        AlertBox.msg('info', "Редактирование !!!", 'Пользователь {s} успешно добавлен или данные о нем успешно исправлены', )
                       } else error_mes('Ошибка', ansv.msg);  
                     },
                     failure: function() { this.unmask(); }
                 });
             }
         } else {
-            error_mes('Ошибка', 'Нет изменений');
+            AlertBox.msg('warn', "Внимание!!!", 'Нет изменений', )
         }
     }
 });
