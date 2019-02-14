@@ -3,7 +3,7 @@ Ext.define('KotelControlWin', {
     initComponent: function () {
         this.title='Управление отоплением';
         this.resizable=false;
-        this.closable=true;
+        this.closable=false;
         this.width=435;
         this.height=575;
         this.plain=true;
