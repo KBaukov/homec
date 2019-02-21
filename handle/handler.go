@@ -463,107 +463,23 @@ func ServeApi(db db.DbService) http.HandlerFunc {
 
 			apiDataResponse(w, data, err)
 		}
-		//if r.URL.Path == "/api/kotel/pressbutt" {
-		//	var (
-		//		msg       string
-		//		err       error
-		//		kotelName string
-		//	)
-		//
-		//	_, kotelName, err = db.GetKotelID()
-		//	if err != nil || kotelName == "" {
-		//		err = errors.New("Котел не найден")
-		//	}
-		//
-		//	butt := r.PostFormValue("button")
-		//	//stage := r.PostFormValue("stage")
-		//
-		//	ws := WsConnections[kotelName].Connection
-		//	if ws == nil {
-		//		err = errors.New("Сессия не активна")
-		//	} else {
-		//		msg = "{\"action\":\"pessButton\", \"butt\":\"" + butt +"\"}"; //"\", \"satge\": \""+stage+"\"}"
-		//		log.Printf("Sending message to %s: %s", kotelName, msg)
-		//		err = ws.WriteMessage(1, []byte(msg))
-		//		if err != nil {
-		//			log.Println("Sending message error:", err)
-		//		} else {
-		//			//for {
-		//			//	if !WsPresButtFlag {
-		//			//		time.Sleep(200 * time.Millisecond);
-		//			//		break;
-		//			//	}
-		//			//}
-		//		}
-		//	}
-		//
-		//	time.Sleep(300 * time.Millisecond);
-		//
-		//	apiDataResponse(w, "", err)
-		//}
-		//if r.URL.Path == "/api/kotel/sessionstart" {
-		//	var (
-		//		msg       string
-		//		err       error
-		//		kotelName string
-		//	)
-		//
-		//	if IsControlSessionOpen {
-		//		err =  errors.New("Котлом уже кто-то управляет")
-		//	} else {
-		//
-		//		_, kotelName, err = db.GetKotelID()
-		//		if err != nil || kotelName == "" {
-		//			err = errors.New("Котел не найден")
-		//		}
-		//		user := r.PostFormValue("user")
-		//		ws := WsConnections[kotelName].Connection
-		//		if ws == nil {
-		//			err = errors.New("Сессия не активна")
-		//		} else {
-		//			msg = "{\"action\":\"sessionStart\",\"user\":\"" + user + "\"}"
-		//			log.Printf("Sending message to %s: %s", kotelName, msg)
-		//			err = ws.WriteMessage(1, []byte(msg))
-		//			if err != nil {
-		//				log.Println("Sending message error:", err)
-		//			}
-		//		}
-		//	}
-		//
-		//
-		//	apiDataResponse(w, msg, err)
-		//}
-		//if r.URL.Path == "/api/kotel/sessionstop" {
-		//	var (
-		//		msg       string
-		//		err       error
-		//		kotelName string
-		//	)
-		//	_, kotelName, err = db.GetKotelID()
-		//	if err != nil || kotelName == "" {
-		//		err = errors.New("Котел не найден")
-		//	}
-		//	ws := WsConnections[kotelName].Connection
-		//	if ws == nil {
-		//		err = errors.New("Сессия не активна")
-		//	} else {
-		//		msg = "{\"action\":\"sessionStop\"}"
-		//		log.Printf("Sending message to %s: %s", kotelName, msg)
-		//		err = ws.WriteMessage(1, []byte(msg))
-		//		if err != nil {
-		//			log.Println("Sending message error:", err)
-		//		}
-		//		IsControlSessionOpen = false;
-		//	}
-		//
-		//	apiDataResponse(w, msg, err)
-		//}
 		if r.URL.Path == "/api/kotel/stat" {
 			//devId := r.PostFormValue("device_id")
 			from := r.PostFormValue("from")
 			to := r.PostFormValue("to")
 			count, _ := strconv.Atoi( r.PostFormValue("count") )
 			data, err := db.GetKotelDataStat(from, to, count)
+			apiDataResponse(w, data, err)
+		}
+		//##############################################
+		if r.URL.Path == "/api/floor/getvalues" {
+
+			devId := r.PostFormValue("device_id")
+
+			//data := ent.FloorData{devId, 0.0, 0.0, 0.0, 25.0, "0_0"}
+			//var err error
+			data, err := db.GetFloorData(devId)
+			//log.Println("Values: ", data)
 			apiDataResponse(w, data, err)
 		}
 		return

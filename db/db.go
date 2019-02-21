@@ -12,6 +12,7 @@ import (
 
 var (
 	RoomData    =	make(map[string]ent.SensorsData)
+	FloorData    =	make(map[string]ent.FloorData)
 	sensorMx	=	sync.RWMutex{}
 )
 const (
@@ -93,6 +94,12 @@ type DbService interface {
 	AddRoomData(data ent.SensorsData) (bool, error)
 	GetRoomData(devId string) (ent.SensorsData, error)
 	GetRoomDataStat(devId string, from string, to string,  count int) ([]ent.SensorsData, error)
+
+	GetFloorData(devId string) (ent.FloorData, error)
+	UpdFloorMeshData(data ent.FloorData) error
+	//UpdFloorDestData(data ent.FloorData) error
+	////AddFloorStatData(data ent.FloorData) (bool, error)
+	////GetFloorDataStat(from string, to string, count int) ([]ent.KotelStatData, error)
 
 }
 
@@ -475,6 +482,90 @@ func (db Database) GetKotelDataStat(from string, to string, count int) ([]ent.Ko
 	}
 
 	return data, err
+}
+
+// ########## FLOOR #####################################
+
+func (db Database) GetFloorData(devId string) (ent.FloorData, error) {
+	var (
+		fData ent.FloorData
+		err error
+	)
+
+	//fData = ent.FloorData{devId, 25.6, 18.5, 63.2, 25.0, "0_0" };
+	fData = FloorData[devId];
+
+	//stmt, err := db.Conn.Prepare(getKotelDataQuery)
+	//if err != nil {
+	//	return kData, err
+	//}
+	//defer stmt.Close()
+	//
+	//rows, err := stmt.Query()
+	//if err != nil {
+	//	return kData, err
+	//}
+	//
+	//if rows.Next() {
+	//	var (
+	//		deviceId string
+	//		to       float64
+	//		tp       float64
+	//		kw       int
+	//		pr       float64
+	//		destto   float64
+	//		desttp   float64
+	//		destkw   int
+	//		destpr   float64
+	//		desttc   float64
+	//		stage    string
+	//	)
+	//	err = rows.Scan(&deviceId, &to, &tp, &kw, &pr, &destto, &desttp, &destkw, &destpr, &desttc, &stage)
+	//	if err != nil {
+	//		return kData, err
+	//	}
+	//
+	//	kData = ent.KotelData{deviceId, to, tp, kw, pr, destto, desttp, destkw, destpr, desttc, stage}
+	//}
+
+	return fData, err
+}
+//
+//func (db Database) UpdFloorDestData(data ent.FloorData) error {
+//
+//	var err error;
+//	//stmt, err := db.Conn.Prepare(updKotelDestDataQuery)
+//	//if err != nil {
+//	//	return err
+//	//}
+//	//defer stmt.Close()
+//	//
+//	//_, err = stmt.Exec(destto, desttp, destkw, destpr, destc, stage)
+//	//if err != nil {
+//	//	return err
+//	//}
+//
+//	return err
+//}
+//
+func (db Database) UpdFloorMeshData(data ent.FloorData) error {
+
+	var err error;
+
+	FloorData[data.DEVICE_ID] = data;
+
+	//stmt, err := db.Conn.Prepare(updKotelMeshDataQuery)
+	//if err != nil {
+	//	return err
+	//}
+	//defer stmt.Close()
+	//
+	//_, err = stmt.Exec(to, tp, kw, pr)
+	//if err != nil {
+	//	return err
+	//}
+
+	return err
 }
 
 //################## Maps #########################

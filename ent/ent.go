@@ -75,6 +75,15 @@ type KotelStatData struct {
 	DATE	  time.Time `json:"date"`
 }
 
+type FloorData struct {
+	DEVICE_ID string  `json:"device_id"`
+	TF        float64 `json:"tf"`
+	TA        float64 `json:"ta"`
+	HA        float64 `json:"ha"`
+	DESTTF    float64 `json:"destTf"`
+	STAGE	  string  `json:"stage"`
+}
+
 type SensorsData struct {
 	DEVICE_ID   string    `json:"device_id"`
 	SENSOR_TYPE string    `json:"sensor_type"`

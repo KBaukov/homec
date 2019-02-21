@@ -18,7 +18,7 @@
 #define LIGHT_PIN  D4
 
 
-//---------------
+//------------------------------
 byte NTCPin = A0;
 #define SERIESRESISTOR 9100
 #define NOMINAL_RESISTANCE 10000
@@ -34,17 +34,18 @@ extern "C" {
 WebSocketsClient webSocket;
 rBase64generic<250> encoder;
 
-U8G2_PCD8544_84X48_F_4W_SW_SPI u8g2(U8G2_R0, D8, D7, D5, D6, D0);  // Nokia 5110 Display
+// Nokia 5110 Display
+U8G2_PCD8544_84X48_F_4W_SW_SPI u8g2(U8G2_R0, D8, D7, D5, D6, D0);  
 
 // Const
 const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 //const char* wlan_ssid           = "Home";
 //const char* wlan_password       = "4r3e2w1q";
-const char* ws_host               = "baukoff.net";
-const int   ws_port               = 443;
-//const char* ws_host             = "alabino.ddns.net";
-//const int   ws_port             = 443;
+//const char* ws_host               = "baukoff.net";
+//const int   ws_port               = 443;
+const char* ws_host             = "192.168.43.175";
+const int   ws_port             = 8085;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
 
 String deviceId = wifi_station_get_hostname();
@@ -76,96 +77,18 @@ int lwait = 2700;
 //###############################################################################
 //### FUNCTIONS ###
 
-void setup() {
-  Serial.begin(115200);
-  Serial.println();//Serial.println();Serial.println();
-
-  u8g2.begin();
-
-  //pinMode(LEFT_BUTT,  INPUT);
-  //pinMode(RIGT_BUTT, INPUT);
-  //pinMode(MODE_BUTT,  INPUT);
-
-  resetPin(LEFT_BUTT);
-  resetPin(RIGT_BUTT);
-  
-  pinMode(CTRL_PIN,   OUTPUT);
-  digitalWrite(CTRL_PIN, LOW);
-  pinMode(LIGHT_PIN,  OUTPUT);
-  digitalWrite(LIGHT_PIN,LOW);
-
-  // connect to WiFi
-  Serial.print("Logging into WiFi: ");
-  Serial.print(wlan_ssid);
-  Serial.print("..");
-
-  renderConnect(0,12, "Find WiFi...");
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(wlan_ssid, wlan_password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println(" success.");
-  String ip = IpAddress2String(WiFi.localIP());
-  Serial.print("IP: "+ip); //Serial.println(WiFi.localIP());
-  
-  renderConnect(0,12, ip);
-
-  // connect to websocket
-  webSocket.beginSSL(ws_host, ws_port, stompUrl);
-  webSocket.setExtraHeaders(headers);
-  webSocket.onEvent(webSocketEvent);
-
-  Serial.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-  webSocket.loop();
-  delay(500);
-  webSocket.loop();
-  delay(1000);
-
-  Serial.print("Connected to server: ");
-  renderConnect(0,12, "Find server...");
+void setPeriod(String val) {
+  unsigned char* buf = new unsigned char[10];
+  val.getBytes(buf, 10, 0);  
+  const char *val2 = (const char*)buf;
+  period = atof(val2);
+  wait = round(k*period);
 }
 
-void loop() {
-  webSocket.loop();
-
-  checkButtPressKey();
-  //checkButtPressKey(RIGT_BUTT, *isRbPress);
-  
-  if (statusId == 0 ) {
-    Serial.print(".");
-    delay(100);
-  }
-
-  if (statusId == 1 && count >= wait ) {
-    //Serial.println("======================================================================================");
-    tFloor = readNTC(); 
-    tAir = random(100, 800) / 10.0; 
-    hAir = random(100, 800) / 10.0;
-    
-    String msg = "{\"action\":\"datasend\", \"type\":\"floordata\", \"data\":{ \"deviceId\":\"" + deviceId + "\", "
-                 + "\"tFloor\":" + tFloor + ", "
-                 + "\"tAir\":" + tAir + ", "
-                 + "\"hAir\":" + hAir + ", "
-                 + "\"stage\": \"" + currentStage + "\""
-                 + " } }";
-
-    sendMessage(msg);
-    count = 0;
-
-    if( tFloor >= destTf) {
-      digitalWrite(CTRL_PIN, LOW);
-    } else {
-      digitalWrite(CTRL_PIN, HIGH);
-    }
-
-    render();
-  } else {
-    count++;
-  }
-  delay(10);
+void resetDevice() {
+  Serial.println("Reset..."); 
+  const char *rr;
+  Serial.println(atof(rr));
 }
 
 String IpAddress2String(const IPAddress& ipAddress)
@@ -174,6 +97,12 @@ String IpAddress2String(const IPAddress& ipAddress)
   String(ipAddress[1]) + String(".") +\
   String(ipAddress[2]) + String(".") +\
   String(ipAddress[3])  ; 
+}
+
+void resetPin(int pin) {
+  pinMode(pin, OUTPUT);
+  delay(500); 
+  pinMode(pin, INPUT);
 }
 
 float readNTC() {
@@ -193,6 +122,37 @@ float readNTC() {
   steinhart = 1.0 / steinhart; // Invert
   steinhart -= 273.15; // convert to C
   return steinhart+NOMINAL_TEMPERATURE;
+}
+
+void renderConnect(int x, int y, String txt) {  
+  const char * st = txt.c_str();  
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_cu12_tr);
+  u8g2.drawStr(x,y,st);
+  u8g2.sendBuffer();
+}
+
+void render(void) {
+  String ttt = String(tFloor).substring(0,4);
+  String hhh = String(destTf).substring(0,4);
+  //Serial.println(ttt);
+  //Serial.println(hhh);
+  
+  const char * tt = ttt.c_str();
+  const char * hh = hhh.c_str();
+  
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_ncenB18_tr); 
+  u8g2.drawStr(0,18, tt);
+  u8g2.drawStr(0,40, hh);
+  u8g2.drawStr(52,18,"C");
+  u8g2.drawStr(52,40,"C");
+  u8g2.setFont(u8g2_font_ncenB08_tr);
+  u8g2.drawStr(48,5,"o");
+  u8g2.drawStr(48,27,"o");
+  //u8g2.setFont(u8g2_font_ncenB08_tr);
+  //u8g2.drawStr(0,46,"~~~~~~~~~~~~~~~~~~~~~");
+  u8g2.sendBuffer();
 }
 
 void checkButtPressKey( ) {
@@ -226,11 +186,69 @@ void checkButtPressKey( ) {
   }
 }
 
-void resetPin(int pin) {
-  pinMode(pin, OUTPUT);
-  delay(500); 
-  pinMode(pin, INPUT);
+
+
+void parseDestData(String json) {
+
+  StaticJsonBuffer<400> jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(json);
+  if (!root.success()) {
+    Serial.println("parseObject() failed");
+    Serial.println("#### " + json);
+    return;
+  }
+
+  Serial.println("====== Dest Values incoming ========"); 
+  destTf = atof(root["destTf"]);
+  String stage = root["stage"]; 
+  currentStage = stage;
 }
+
+String parseData(String json, String key) {
+  StaticJsonBuffer<500> jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(json);
+  if (!root.success()) {
+    Serial.println("parseObject() failed");
+    return "";
+  }
+  return root[key];
+}
+
+String b64encode(String s) {
+  if(encoder.encode(s)==RBASE64_STATUS_OK) {
+    String res = encoder.result();
+    return res; 
+  }
+  return "NaN";  
+}
+String b64decode(String s) {
+  encoder.decode(s);  
+  return encoder.result();  
+}
+
+
+void presKey(String butt) {
+  char cc[2];
+  
+  butt.toCharArray(cc, 2);
+  //return cc[0]
+  int n = (int) cc[0];
+  Serial.print("Key="); Serial.println(cc[0]);
+  if (n == 76) {
+    //Serial.println("Left");
+    destTf--;
+  }
+  if (n == 82) {
+    //Serial.println("Right");
+    destTf++;
+  }
+  if (n == 77) {
+    //Serial.println("Mode")
+  }
+
+  render();
+}
+
 
 void sendMessage(String & msg) {
   webSocket.sendTXT(msg.c_str(), msg.length());
@@ -319,106 +337,94 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 
 }
 
-void renderConnect(int x, int y, String txt) {  
-  const char * st = txt.c_str();  
-  u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_cu12_tr);
-  u8g2.drawStr(x,y,st);
-  u8g2.sendBuffer();
-}
+void setup() {
+  Serial.begin(115200);
+  Serial.println();//Serial.println();Serial.println();
 
-void render(void) {
-  String ttt = String(tFloor).substring(0,4);
-  String hhh = String(destTf).substring(0,4);
-  //Serial.println(ttt);
-  //Serial.println(hhh);
+  u8g2.begin();
+
+  //pinMode(LEFT_BUTT,  INPUT);
+  //pinMode(RIGT_BUTT, INPUT);
+  //pinMode(MODE_BUTT,  INPUT);
+
+  resetPin(LEFT_BUTT);
+  resetPin(RIGT_BUTT);
   
-  const char * tt = ttt.c_str();
-  const char * hh = hhh.c_str();
+  pinMode(CTRL_PIN,   OUTPUT);
+  digitalWrite(CTRL_PIN, LOW);
+  pinMode(LIGHT_PIN,  OUTPUT);
+  digitalWrite(LIGHT_PIN,LOW);
+
+  // connect to WiFi
+  Serial.print("Logging into WiFi: ");
+  Serial.print(wlan_ssid);
+  Serial.print("..");
+
+  renderConnect(0,12, "Find WiFi...");
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(wlan_ssid, wlan_password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println(" success.");
+  String ip = IpAddress2String(WiFi.localIP());
+  Serial.println("IP: "+ip); //Serial.println(WiFi.localIP());
   
-  u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_ncenB18_tr); 
-  u8g2.drawStr(0,18, tt);
-  u8g2.drawStr(0,40, hh);
-  u8g2.drawStr(52,18,"C");
-  u8g2.drawStr(52,40,"C");
-  u8g2.setFont(u8g2_font_ncenB08_tr);
-  u8g2.drawStr(48,5,"o");
-  u8g2.drawStr(48,27,"o");
-  //u8g2.setFont(u8g2_font_ncenB08_tr);
-  //u8g2.drawStr(0,46,"~~~~~~~~~~~~~~~~~~~~~");
-  u8g2.sendBuffer();
+  renderConnect(0,12, ip);
+
+  // connect to websocket
+  webSocket.beginSSL(ws_host, ws_port, stompUrl);
+  webSocket.setExtraHeaders(headers);
+  webSocket.onEvent(webSocketEvent);
+
+  Serial.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+  webSocket.loop();
+  delay(500);
+  webSocket.loop();
+  delay(1000);
+
+  Serial.print("Connected to server: ");
+  renderConnect(0,12, "Find server...");
 }
 
-void parseDestData(String json) {
+void loop() {
+  webSocket.loop();
 
-  StaticJsonBuffer<400> jsonBuffer;
-  JsonObject& root = jsonBuffer.parseObject(json);
-  if (!root.success()) {
-    Serial.println("parseObject() failed");
-    Serial.println("#### " + json);
-    return;
-  }
-
-  Serial.println("====== Dest Values incoming ========"); 
-  destTf = atof(root["destTf"]);
-  String stage = root["stage"]; 
-  currentStage = stage;
-}
-
-String parseData(String json, String key) {
-  StaticJsonBuffer<500> jsonBuffer;
-  JsonObject& root = jsonBuffer.parseObject(json);
-  if (!root.success()) {
-    Serial.println("parseObject() failed");
-    return "";
-  }
-  return root[key];
-}
-
-String b64encode(String s) {
-  if(encoder.encode(s)==RBASE64_STATUS_OK) {
-    String res = encoder.result();
-    return res; 
-  }
-  return "NaN";  
-}
-String b64decode(String s) {
-  encoder.decode(s);  
-  return encoder.result();  
-}
-
-
-void presKey(String butt) {
-  char cc[2];
+  checkButtPressKey(); 
   
-  butt.toCharArray(cc, 2);
-  //return cc[0]
-  int n = (int) cc[0];
-  Serial.print("Key="); Serial.println(cc[0]);
-  if (n == 76) {
-    //Serial.println("Left");
-    destTf--;
+  if (statusId == 0 ) {
+    Serial.print(".");
+    delay(100);
   }
-  if (n == 82) {
-    //Serial.println("Right");
-    destTf++;
-  }
-  if (n == 77) {
-    //Serial.println("Mode")
-  }
-}
 
-void setPeriod(String val) {
-  unsigned char* buf = new unsigned char[10];
-  val.getBytes(buf, 10, 0);  
-  const char *val2 = (const char*)buf;
-  period = atof(val2);
-  wait = round(k*period);
-}
+  if (statusId == 1 && count >= wait ) {
+    //Serial.println("======================================================================================");
+    tFloor = readNTC(); 
+    tAir = random(100, 800) / 10.0; 
+    hAir = random(100, 800) / 10.0;
+    
+    String msg = "{\"action\":\"datasend\", \"type\":\"floordata\", \"data\":{ \"deviceId\":\"" + deviceId + "\", "
+                 + "\"tf\":" + tFloor + ", "
+                 + "\"ta\":" + tAir + ", "
+                 + "\"ha\":" + hAir + ", "
+                 + "\"destTf\":" + destTf + ", "
+                 + "\"stage\": \"" + currentStage + "\""
+                 + " } }";
 
-void resetDevice() {
-  Serial.println("Reset..."); 
-  const char *rr;
-  Serial.println(atof(rr));
+    sendMessage(msg);
+    count = 0;
+
+    if( tFloor >= destTf) {
+      digitalWrite(CTRL_PIN, LOW);
+    } else {
+      digitalWrite(CTRL_PIN, HIGH);
+    }
+
+    render();
+  } else {
+    count++;
+  }
+  delay(10);
 }

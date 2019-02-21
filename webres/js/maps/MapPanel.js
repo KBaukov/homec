@@ -97,44 +97,36 @@ Ext.define('MapPanel', {
             var devId =  this.mapData.sensors[i].device_id;
             var devName =  devices.getName( devId );
             var type = this.mapData.sensors[i].type;
+            var url, stype, data;
             if(type=='kotelIcon') {
-                Ext.Ajax.request({
-                    url: '/api/kotel/getvalues', scope: this, method: 'POST',
-                    params: { device_id: devName, id: devId },
-                    success: function(response, opts) {
-                        var ansv = Ext.decode(response.responseText);
-                        var sens = Ext.getDom(this.mapData.id+'_sensor_'+opts.params.id);
-                        if(ansv.success) {
-                            this.dataRender('koteldata', sens, ansv);
-                            sens.style.opacity = 0.2;
-                        } else {
-                            if(ansv.msg=='нет данных') {
-                                sens.style.opacity = 0.2;
-                            } else error_mes('Ошибка', ansv.msg);
-                        }
-                    },
-                    failure: function() { this.unmask(); }
-                });
-            } else {
-                Ext.Ajax.request({
-                    url: '/api/sensors/data', scope: this, method: 'POST',
-                    params: { device_id: devName, id: devId },
-                    success: function(response, opts) {
-                        var ansv = Ext.decode(response.responseText);
-                        var sens = Ext.getDom(this.mapData.id+'_sensor_'+opts.params.id);
-                        if(ansv.success) {
-                            this.dataRender('roomdata', sens, ansv);
-                            sens.style.opacity = 0.2;
-                        }  else {
-                            if(ansv.msg=='нет данных') {
-                                //sens.style.opacity = 0.2;
-                            } else error_mes('Ошибка', ansv.msg);
-                        }
-                    },
-                    failure: function() { this.unmask(); }
-                });
+                url = '/api/kotel/getvalues';
+                data = { device_id: devName, id: devId, type: 'koteldata' };
+            } else if (type=='tempIcon') {
+                url = '/api/sensors/data';
+                data = { device_id: devName, id: devId, type: 'roomdata' };
+            } else if(type=='floorIcon') {
+                url = '/api/floor/getvalues';
+                data = { device_id: devName, id: devId, type: 'floordata' };
             }
 
+            Ext.Ajax.request({
+                url: url, scope: this, method: 'POST',
+                params: { device_id: devName, id: devId },
+                success: function(response, opts) {
+                    var ansv = Ext.decode(response.responseText);
+                    var sens = Ext.getDom(this.mapData.id+'_sensor_'+opts.params.id);
+                    var stype = opts.params.type;
+                    if(ansv.success) {
+                        this.dataRender(stype, sens, ansv);
+                        sens.style.opacity = 0.2;
+                    } else {
+                        if(ansv.msg=='нет данных') {
+                            sens.style.opacity = 0.2;
+                        } else error_mes('Ошибка', ansv.msg);
+                    }
+                },
+                failure: function() { this.unmask(); }
+            });
         }
     },
     setListeners: function() {
@@ -142,19 +134,28 @@ Ext.define('MapPanel', {
         for(var i=0; i<ss.length; i++) {
             el = Ext.getDom(this.mapData.id+'_sensor_'+ss[i].device_id);
             if (ss[i].type == 'kotelIcon') {
-                el.ondblclick = this.kotelControl
-                el.ontouchend  = this.kotelControl
+                el.ondblclick = this.kotelControl;
+                el.ontouchend  = this.kotelControl;
             }
             if(ss[i].type == 'tempIcon') {
-                el.ondblclick = this.chartData
-                el.ontouchend  = this.chartData
+                el.ondblclick = this.chartData;
+                el.ontouchend  = this.chartData;
             }
-            this.wssConnUp(ss[i].type, el)
+            if(ss[i].type == 'floorIcon') {
+                el.ondblclick = this.floorControl;
+                el.ontouchend  = this.floorControl;
+            }
+            this.wssConnUp(ss[i].type, el);
         }
     },
     kotelControl: function(ev) {
         var cmp = Ext.getCmp('map'+ev.target.id.split('_')[0]);
         cmp.controllWin  = Ext.create('KotelControlWin', {papa: this});
+        cmp.controllWin.openWin();
+    },
+    floorControl: function(ev) {
+        var cmp = Ext.getCmp('map'+ev.target.id.split('_')[0]);
+        cmp.controllWin  = Ext.create('FloorControlWin', {papa: this}); // TODO create FloorControlWin
         cmp.controllWin.openWin();
     },
     chartData: function(ev) {
@@ -234,6 +235,11 @@ Ext.define('MapPanel', {
         } else if( type == 'roomdata' ) {
             sens.innerHTML = parseFloat(data.data.t).toFixed(2) +'°C</br></br>'
                 +( (data.data.h!='0.00') ? parseFloat(data.data.h).toFixed(2)+'%' : '');
+        } else if( type == 'floordata' ) {
+            sens.innerHTML = parseFloat(data.data.tf).toFixed(2) +'°C</br></br>'
+                +parseFloat(data.data.ta).toFixed(2)+'°C</br></br>'
+                +parseFloat(data.data.ha).toFixed(2)+'%'
+
         }
         sens.style.opacity = 1;
     },
@@ -246,7 +252,7 @@ Ext.define('MapPanel', {
         var devId =e.parentMenu.init.el.id.split('_')[2];
         var devName = devices.getName(devId);
         var conn = e.parentMenu.init.conn;
-        this.delayWin = Ext.create('KotelDelayWin', {papa: this, devName: devName, wss: conn});
+        this.delayWin = Ext.create('KotelDelayWin', {papa: this, devName: devName, wss: conn}); // TODO  rename KotelDelayWin = > DelayWin
         this.delayWin.openWin();
     }
 });

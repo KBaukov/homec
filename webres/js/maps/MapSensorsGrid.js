@@ -24,7 +24,11 @@ Ext.define('MapSensorsGrid', {
         MapSensorsGrid.superclass.initComponent.apply(this, arguments);
     },
     initColumns: function() {
-	  this.typeStore =  [ ['tempIcon','Темп. Сенсор'], ['pirIcon','Сенсор Движения'], ['pressIcon','Сенсор Давления'], ['kotelIcon','Котел']  ];
+	  this.typeStore =  [
+	      ['tempIcon','Темп. Сенсор'], ['pirIcon','Сенсор Движения'],
+          ['pressIcon','Сенсор Давления'], ['kotelIcon','Контроллер Котла'],
+          ['floorIcon','Контролер теплого пола']
+      ];
         
         this.columns = [            
             {header: 'ID', align: 'left', width: 40, dataIndex: 'id' }, 

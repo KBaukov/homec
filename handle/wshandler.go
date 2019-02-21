@@ -278,6 +278,47 @@ func (c *Conn) readPump(db db.DbService) {
 					hub.sendDataToWeb(msg, devId);
 
 				}
+
+				if strings.Contains(msg, "\"type\":\"floordata\"") {
+					var data ent.FloorData
+
+					wsData := ent.WsSendData{"", "", ""}
+
+					err = json.Unmarshal([]byte(msg), &wsData)
+					if err != nil {
+						log.Println("Error data unmarshaling: ", err)
+					}
+
+					dd, err := json.Marshal(wsData.DATA)
+					if err != nil {
+						log.Println("Error data marshaling: ", err)
+					}
+
+					err = json.Unmarshal(dd, &data)
+					if err != nil {
+						log.Println("Error data unmarshaling: ", err)
+					}
+
+					log.Println("incoming floor data:", data)
+
+					if !sendMsg(c, "{action:datasend,success:true}") {
+						log.Println("Send to " + devId + ": failed")
+						break
+					} else {
+						//log.Println("Send to " + devId + ": success")
+						err = db.UpdFloorMeshData(data)
+						if err != nil {
+							log.Println("Error data writing in db: ", err)
+						}
+						//_, err = db.AddKotelStatData(data.TO, data.TP, data.KW, data.PR)
+						//if err != nil {
+						//	log.Println("Error data writing in db: ", err)
+						//}
+
+						hub.sendDataToWeb(msg, devId);
+
+					}
+				}
 			}
 			if strings.Contains(msg, "\"action\":\"pessButton\"") {
 				if strings.Contains(msg, "true") {
@@ -317,7 +358,7 @@ func (c *Conn) readPump(db db.DbService) {
 						break
 					}
 				}
-				if strings.Contains(msg, "\"type\":\"roomdata\"") {
+				if strings.Contains(msg, "\"type\":\"floordata\"") {
 
 				}
 
@@ -343,6 +384,9 @@ func (c *Conn) readPump(db db.DbService) {
 					if !sendMsg(c, msg) {
 						break
 					}
+				}
+				if strings.Contains(msg, "\"type\":\"floordata\"") {
+
 				}
 
 			}
