@@ -317,13 +317,13 @@ div.kotelIcon {
 }
 
 div.floorIcon {
-    height: 86px;
-    width: 48px;
-    /*
-    background-image: url("../img/kotel.png");
+    height: 77px;
+    width: 102px;
+
+    background-image: url("../img/floor.png");
     background-repeat: no-repeat;
     background-position: left center;
-    */
+
     position: absolute;
     text-align: right;
     color: #ff6600;
@@ -339,6 +339,26 @@ div#ht2 {
     left: 200px;
 }
 
+div#flBase{
+    height: 455px; width:391px;
+    background-image: url("../img/floor/floor.png");
+}
+
+div#flrightButt {
+     height: 42px; width:139px;
+     background-image: url("../img/floor/r_buut.png");
+    top: 22px; left: 204px;
+    position: absolute;
+ }
+
+div#flleftButt {
+    height: 42px; width:152px;
+    background-image: url("../img/floor/l_buut.png");
+    top: 22px; left: 52px;
+    position: absolute;
+}
+div#flleftButt:hover  { top: 23px; height: 41px; }
+div#flrightButt:hover { top: 23px; height: 41px; }
 /*
 .x-grid3-cell-selected { border: #99BBE8 1px solid !important; }
 .x-grid3-cell  { border: #ffffff 1px solid !important; }

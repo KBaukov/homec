@@ -74,6 +74,8 @@ bool isMbPress = false;
 int lcount = 0;
 int lwait = 2700;
 
+bool isOn = false;
+
 //###############################################################################
 //### FUNCTIONS ###
 
@@ -133,25 +135,66 @@ void renderConnect(int x, int y, String txt) {
 }
 
 void render(void) {
-  String ttt = String(tFloor).substring(0,4);
-  String hhh = String(destTf).substring(0,4);
-  //Serial.println(ttt);
-  //Serial.println(hhh);
   
-  const char * tt = ttt.c_str();
-  const char * hh = hhh.c_str();
+  String t1 = String(tAir).substring(0,2); String d1 = String(tAir).substring(4,3);
+  String h  = String(hAir).substring(0,2); String d2 = String(hAir).substring(4,3);
+  String t2 = String(tFloor).substring(0,2); String d3 = String(tFloor).substring(4,3);
+  String t3 = String(destTf).substring(0,2); String d4 = String(destTf).substring(4,3);
+  
+  const char * tt1 = t1.c_str(); const char * dd1 = d1.c_str();
+  const char * tt2 = t2.c_str(); const char * dd3 = d3.c_str();
+  const char * tt3 = t3.c_str(); const char * dd4 = d4.c_str();
+  const char * hh = h.c_str();   const char * dd2 = d2.c_str();
   
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_ncenB18_tr); 
-  u8g2.drawStr(0,18, tt);
-  u8g2.drawStr(0,40, hh);
-  u8g2.drawStr(52,18,"C");
-  u8g2.drawStr(52,40,"C");
-  u8g2.setFont(u8g2_font_ncenB08_tr);
-  u8g2.drawStr(48,5,"o");
-  u8g2.drawStr(48,27,"o");
-  //u8g2.setFont(u8g2_font_ncenB08_tr);
-  //u8g2.drawStr(0,46,"~~~~~~~~~~~~~~~~~~~~~");
+  // air temp and humidity 
+  u8g2.setFont(u8g2_font_10x20_tn); 
+  u8g2.drawStr(0,13, tt1); u8g2.drawStr(22,13, dd1); 
+  u8g2.drawStr(0,30, hh);  u8g2.drawStr(22,30, dd2); 
+  u8g2.setFont(u8g2_font_fub11_tr);
+  u8g2.drawStr(18,13, "."); u8g2.drawStr(18,30, ".");
+  u8g2.setFont(u8g2_font_timR10_tr);
+  u8g2.drawStr(35,14,"C");
+  u8g2.drawStr(34,30,"%");
+  u8g2.setFont(u8g2_font_u8glib_4_tf);
+  u8g2.drawStr(33,7,"o");
+
+  // Floor temp
+  u8g2.setFont(u8g2_font_t0_17b_tn); 
+  u8g2.drawStr(0,48, tt2); u8g2.drawStr(20,48, dd3); 
+  u8g2.setFont(u8g2_font_fub11_tr);
+  u8g2.drawStr(16,48, ".");
+  u8g2.setFont(u8g2_font_timR10_tr);
+  u8g2.drawStr(30,48,"C");
+  u8g2.setFont(u8g2_font_u8glib_4_tf);
+  u8g2.drawStr(29,40,"o");
+
+  // dest Floor temp
+  u8g2.setFont(u8g2_font_t0_17b_tn); 
+  u8g2.drawStr(55,48, tt3); //u8g2.drawStr(62,48, dd4); 
+  //u8g2.setFont(u8g2_font_fub11_tr);
+  //u8g2.drawStr(58,48, ".");
+  u8g2.setFont(u8g2_font_timR10_tr);
+  u8g2.drawStr(74,48,"C");
+  u8g2.setFont(u8g2_font_u8glib_4_tf);
+  u8g2.drawStr(73,40,"o");
+
+  // Arrow
+  u8g2.setFont(u8g2_font_open_iconic_arrow_1x_t);
+  u8g2.drawStr(44,47,"B");
+
+  // On/Off icon
+  u8g2.setFont(u8g2_font_open_iconic_check_4x_t);
+  if (isOn) {
+    u8g2.drawStr(51,32,"A");
+  } else {
+    u8g2.drawStr(51,32,"B");
+  }
+
+  // Line
+  u8g2.drawLine(0, 33, 84, 33);
+  u8g2.drawLine(48, 33, 48, 0);
+
   u8g2.sendBuffer();
 }
 
@@ -417,8 +460,10 @@ void loop() {
     count = 0;
 
     if( tFloor >= destTf) {
+      isOn = false;
       digitalWrite(CTRL_PIN, LOW);
     } else {
+      isOn = true;
       digitalWrite(CTRL_PIN, HIGH);
     }
 
