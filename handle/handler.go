@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"github.com/KBaukov/homec/config"
 	"github.com/KBaukov/homec/db"
 	"github.com/KBaukov/homec/ent"
 	"html/template"
@@ -22,6 +23,10 @@ import (
 
 var (
 	sessStore = sessions.NewCookieStore([]byte("33446a9dcf9ea060a0a6532b166da32f304af0de"))
+	cfg = config.LoadConfig("config.json")
+	mainTemplate = cfg.FrontRoute.MainTemplate;
+	loginTemplate = cfg.FrontRoute.LoginTemplate;
+	webres = cfg.FrontRoute.WebResFolder;
 )
 
 func init() {
@@ -76,7 +81,7 @@ func ServeHome(w http.ResponseWriter, r *http.Request) {
 		} else {
 			user := u.(ent.User)
 			user.PASS = user.PASS[10:16]
-			t, err := template.ParseFiles("./webres/html/main.html")
+			t, err := template.ParseFiles(mainTemplate)
 			if err != nil {
 				log.Println("Temlate parse error: ", err)
 			}
@@ -115,7 +120,7 @@ func ServeLogin(db db.DbService) http.HandlerFunc {
 
 			if len(users) != 1 {
 				ed := errData{403, "Неправильные логин или пароль./nВ доступе отказано."}
-				t, err := template.ParseFiles("./webres/html/login.html")
+				t, err := template.ParseFiles(loginTemplate)
 				if err != nil {
 					log.Println("Temlate parse error: ", err)
 				}
@@ -135,7 +140,7 @@ func ServeLogin(db db.DbService) http.HandlerFunc {
 		}
 		if r.Method == "GET" {
 			ed := errData{200, ""}
-			t, err := template.ParseFiles("./webres/html/login.html")
+			t, err := template.ParseFiles(loginTemplate)
 			if err != nil {
 				log.Println("Temlate parse error: ", err)
 			}
@@ -160,7 +165,8 @@ func ServeLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeWebRes(w http.ResponseWriter, r *http.Request) {
-	if strings.Contains(r.URL.Path, "webres") {
+	//log.Println("###: ", r.URL.Path)
+	if strings.Contains(r.URL.Path, webres) {
 		http.ServeFile(w, r, "."+r.URL.Path)
 	}
 }

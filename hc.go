@@ -54,10 +54,12 @@ func main() {
 
 	go http.ListenAndServe(":80", http.HandlerFunc(redirect))
 
+	frf := Cfg.FrontRoute.WebResFolder;
+
 	http.HandleFunc("/logout", handle.ServeHome)
 	http.HandleFunc("/login", handle.ServeLogin(db))
 	http.HandleFunc("/home", handle.ServeHome)
-	http.HandleFunc("/webres/", handle.ServeWebRes)
+	http.HandleFunc("/"+frf+"/", handle.ServeWebRes)
 	http.HandleFunc("/api/", handle.ServeApi(db))
 	http.HandleFunc("/ws", handle.ServeWs(db))
 

@@ -26,6 +26,11 @@ type Configuration struct {
 		PongWait int
 		CloseGracePeriod int
 	}
+	FrontRoute struct {
+		WebResFolder string
+		MainTemplate string
+		LoginTemplate string
+	}
 }
 
 // loadConfig читает и парсит настройки сервиса
