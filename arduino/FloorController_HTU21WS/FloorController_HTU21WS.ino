@@ -14,11 +14,11 @@
 
 #endif
 
-#define LEFT_BUTT D3
-#define RIGT_BUTT  D4
-//#define MODE_BUTT  D3
+#define LEFT_BUTT D1
+#define RIGT_BUTT  D2
 #define CTRL_PIN   D5
-//#define LIGHT_PIN  D4
+#define SDA  D4
+#define SCL  D3
 
 
 //------------------------------
@@ -41,7 +41,7 @@ HTU21D myHTU21D(HTU21D_RES_RH12_TEMP14);
 
 
 // Nokia 5110 Display
-U8G2_PCD8544_84X48_F_4W_SW_SPI u8g2(U8G2_R0, D8, D7, D5, D6, D0);  
+U8G2_PCD8544_84X48_F_4W_SW_SPI u8g2(U8G2_R0, D8, D7, RX, D6, D0);  
 
 // Const
 const char* wlan_ssid             = "WF";
@@ -108,7 +108,7 @@ String IpAddress2String(const IPAddress& ipAddress)
 }
 
 void resetPin(int pin) {
-  pinMode(pin, OUTPUT);
+  pinMode(pin, OUTPUT); digitalWrite(pin, LOW);
   delay(500); 
   pinMode(pin, INPUT);
 }
@@ -207,32 +207,36 @@ void render(void) {
 void checkButtPressKey( ) {
   // read the state of the pushbutton value:
   int lState = digitalRead(LEFT_BUTT);
-  if (lState == HIGH && !isLbPress ) {
-    isLbPress = true; 
-  } else if(lState == HIGH && isLbPress) {
-    resetPin(LEFT_BUTT);
-    destTf = destTf - 1.0;
-    render();
-    //digitalWrite(LIGHT_PIN,HIGH);
-    lcount = 2700;
+  if (lState == HIGH ) {
+    if(isLbPress) {
+      resetPin(LEFT_BUTT);
+      destTf = destTf - 1.0;
+      render();
+      //digitalWrite(LIGHT_PIN,HIGH);
+      //lcount = 2700;
+    } else {
+      isLbPress = true;
+    }
+     
   }
 
   int rState = digitalRead(RIGT_BUTT);
-  if (rState == HIGH && !isRbPress ) {
-    isRbPress = true; 
-    //digitalWrite(ledPin, LOW);
-  } else if(rState == HIGH && isRbPress) {
-    resetPin(RIGT_BUTT);
-    destTf = destTf + 1.0;
-    render();
-    //digitalWrite(LIGHT_PIN,HIGH);
-    lcount = 2700;
+  if (rState == HIGH) {
+    if(isRbPress) {
+      resetPin(RIGT_BUTT);
+      destTf = destTf + 1.0;
+      render();
+      //digitalWrite(LIGHT_PIN,HIGH);
+      //lcount = 2700;
+    } else {
+      isRbPress = true;
+    }
   }
 
-  if(lcount>=0) lcount--;
-  else {
+  //if(lcount>=0) lcount--;
+  //else {
     //digitalWrite(LIGHT_PIN,LOW);
-  }
+  //}
 }
 
 
@@ -390,12 +394,16 @@ void setup() {
   Serial.begin(115200);
   Serial.println();//Serial.println();Serial.println();
 
-  while (myHTU21D.begin(D2,D1) != true)
+  while (myHTU21D.begin(SDA,SCL) != true)
   {
     Serial.println(F("Si7021 sensor is faild or not connected"));
     delay(5000);
   }
   Serial.println(F("Si7021 sensor is active"));
+
+  tFloor = readNTC(); 
+  tAir = myHTU21D.readTemperature(); //random(100, 800) / 10.0; 
+  hAir = myHTU21D.readHumidity(); //random(100, 800) / 10.0;
 
   u8g2.begin();
 
@@ -450,6 +458,10 @@ void loop() {
 
   checkButtPressKey(); 
   
+  
+
+  
+  
   if (statusId == 0 ) {
     Serial.print(".");
     delay(100);
@@ -458,8 +470,8 @@ void loop() {
   if (statusId == 1 && count >= wait ) {
     //Serial.println("======================================================================================");
     tFloor = readNTC(); 
-    tAir = myHTU21D.readTemperature(); //random(100, 800) / 10.0; 
-    hAir = myHTU21D.readHumidity(); //random(100, 800) / 10.0;
+  tAir = myHTU21D.readTemperature(); //random(100, 800) / 10.0; 
+  hAir = myHTU21D.readHumidity(); //random(100, 800) / 10.0;
     
     String msg = "{\"action\":\"datasend\", \"type\":\"floordata\", \"data\":{ \"deviceId\":\"" + deviceId + "\", "
                  + "\"tf\":" + tFloor + ", "
@@ -480,9 +492,10 @@ void loop() {
       digitalWrite(CTRL_PIN, HIGH);
     }
 
-    render();
+    
   } else {
     count++;
   }
+  render();
   delay(10);
 }
