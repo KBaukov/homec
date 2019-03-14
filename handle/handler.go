@@ -168,13 +168,51 @@ func ServeWebRes(w http.ResponseWriter, r *http.Request) {
 	//log.Println("###: ", r.URL.Path)
 	if strings.Contains(r.URL.Path, webres) {
 		http.ServeFile(w, r, "."+r.URL.Path)
+	} else {
+		http.ServeFile(w, r, "./"+webres+r.URL.Path)
 	}
+
 }
 
 func ServeApi(db db.DbService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("incoming request in: %v", r.URL.Path)
+
+		if r.URL.Path == "/api/login" {
+
+			login := strings.ToLower(r.PostFormValue("username"))
+			pass := r.PostFormValue("password")
+
+			pass, err := HashPass(pass)
+			if err != nil {
+				log.Println("Ошибка хеширования", err)
+			}
+
+			users, err := db.Auth(login, pass)
+			if err != nil {
+				http.Error(w, "Ошибка обработки запроса", http.StatusInternalServerError)
+				log.Printf("Ошибка авторизации (логин: %v): %v", login, err)
+			}
+
+			if len(users) != 1 {
+				err = errors.New("Неправильные логин или пароль. В доступе отказано.")
+				apiDataResponse(w, []int{}, err)
+				return
+			}
+
+			u := *users[0]
+			log.Println("Login user: ", u)
+			err = createSession(w, r, u, "user")
+			if err != nil {
+
+			}
+
+			apiDataResponse(w, u, err)
+			return;
+
+		}
+
 
 		session := getSession(w, r)
 		u:=session.Values["user"]

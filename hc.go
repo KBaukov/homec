@@ -60,6 +60,10 @@ func main() {
 	http.HandleFunc("/login", handle.ServeLogin(db))
 	http.HandleFunc("/home", handle.ServeHome)
 	http.HandleFunc("/"+frf+"/", handle.ServeWebRes)
+	http.HandleFunc("/css/", handle.ServeWebRes)
+	http.HandleFunc("/js/", handle.ServeWebRes)
+	http.HandleFunc("/img/", handle.ServeWebRes)
+	http.HandleFunc("/fonts/", handle.ServeWebRes)
 	http.HandleFunc("/api/", handle.ServeApi(db))
 	http.HandleFunc("/ws", handle.ServeWs(db))
 

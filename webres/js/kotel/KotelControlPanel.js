@@ -19,12 +19,10 @@ Ext.define('KotelControlPanel', {
         this.destVal = ['25','60','11','1.8','e0','p0'];
         this.stage   = ['ot','vs','va','pr', 'es','es'];
         this.va      = ['2','4','7','9','11','14'];
-
         this.desttc = 0;
-
         this.mode = 0;
         this.curSatgeInx = 0;
-        this.curVaInx = 4;
+        this.curVaInx = 0;
         
         this.initForm();
 
