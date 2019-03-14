@@ -1,4 +1,4 @@
 .idea
 *.exe
 *.json
-www/*
+www
