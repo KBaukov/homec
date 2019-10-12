@@ -9,8 +9,6 @@
 
 #ifdef U8X8_HAVE_HW_SPI
 #include <SPI.h>
-#include <Wire.h>
-#include <HTU21D.h>
 
 #endif
 
@@ -37,7 +35,7 @@ extern "C" {
 WebSocketsClient webSocket;
 rBase64generic<250> encoder;
 
-HTU21D myHTU21D(HTU21D_RES_RH12_TEMP14);
+//HTU21D myHTU21D(HTU21D_RES_RH12_TEMP14);
 
 
 // Nokia 5110 Display
@@ -390,13 +388,14 @@ void setup() {
   Serial.begin(115200);
   Serial.println();//Serial.println();Serial.println();
 
+/*
   while (myHTU21D.begin(D2,D1) != true)
   {
     Serial.println(F("Si7021 sensor is faild or not connected"));
     delay(5000);
   }
   Serial.println(F("Si7021 sensor is active"));
-
+*/
   u8g2.begin();
 
   //pinMode(LEFT_BUTT,  INPUT);
@@ -458,8 +457,8 @@ void loop() {
   if (statusId == 1 && count >= wait ) {
     //Serial.println("======================================================================================");
     tFloor = readNTC(); 
-    tAir = myHTU21D.readTemperature(); //random(100, 800) / 10.0; 
-    hAir = myHTU21D.readHumidity(); //random(100, 800) / 10.0;
+    tAir = random(100, 800) / 10.0; 
+    hAir = random(100, 800) / 10.0;
     
     String msg = "{\"action\":\"datasend\", \"type\":\"floordata\", \"data\":{ \"deviceId\":\"" + deviceId + "\", "
                  + "\"tf\":" + tFloor + ", "

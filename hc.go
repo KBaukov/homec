@@ -52,7 +52,7 @@ func main() {
 		defer db.Conn.Close();
 	}
 
-	go http.ListenAndServe(":80", http.HandlerFunc(redirect))
+	//go http.ListenAndServe(":80", http.HandlerFunc(redirect))
 
 	frf := Cfg.FrontRoute.WebResFolder;
 

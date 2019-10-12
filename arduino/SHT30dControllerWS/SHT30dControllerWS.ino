@@ -23,10 +23,10 @@ extern "C" {
 
 Adafruit_SHT31 sht30 = Adafruit_SHT31();
 
-const char* wlan_ssid             = "WF";
-const char* wlan_password         = "k0k0JambA";
+const char* wlan_ssid             = "Home";
+const char* wlan_password         = "4r3e2w1q";
 
-const char* ws_host               = "strobo.ddns.net";
+const char* ws_host               = "baukoff.net";
 const int   ws_port               = 443;
 const char* stompUrl              = "/ws"; // don't forget the leading "/" !!!
 
@@ -98,8 +98,8 @@ void loop() {
     Serial.print(".");
     delay(100);
   } else if(statusId == 1 && count >= wait ) {
-    //temp = sht30.readTemperature(); hum  = sht30.readHumidity();
-    temp = random(100, 800) / 10.0; hum = random(100, 800) / 10.0;
+    temp = sht30.readTemperature(); hum  = sht30.readHumidity();
+    //temp = random(100, 800) / 10.0; hum = random(100, 800) / 10.0;
     if (isnan(hum) || isnan(temp)) {    
       Serial.println("SHT Error!");
     } else {

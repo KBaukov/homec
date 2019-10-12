@@ -44,10 +44,10 @@ HTU21D myHTU21D(HTU21D_RES_RH12_TEMP14);
 U8G2_PCD8544_84X48_F_4W_SW_SPI u8g2(U8G2_R0, D8, D7, RX, D6, D0);  
 
 // Const
-const char* wlan_ssid             = "WF";
-const char* wlan_password         = "k0k0JambA";
-//const char* wlan_ssid           = "Home";
-//const char* wlan_password       = "4r3e2w1q"
+//const char* wlan_ssid             = "WF";
+//const char* wlan_password         = "k0k0JambA";
+const char* wlan_ssid           = "Home";
+const char* wlan_password       = "4r3e2w1q";
 const char* ws_host               = "baukoff.net";
 const int   ws_port               = 443;
 //const char* ws_host             = "192.168.43.175";
@@ -457,9 +457,6 @@ void loop() {
   webSocket.loop();
 
   checkButtPressKey(); 
-  
-  
-
   
   
   if (statusId == 0 ) {

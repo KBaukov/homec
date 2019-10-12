@@ -1,4 +1,4 @@
- ju#include <WebSocketsClient.h>
+#include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 #include <OneWire.h>
 #include <rBase64.h>
@@ -29,7 +29,7 @@ const char* wlan_ssid             = "WF";
 const char* wlan_password         = "k0k0JambA";
 //const char* wlan_ssid           = "Home";
 //const char* wlan_password       = "4r3e2w1q";
-const char* ws_host               = "strobo.ddns.net";
+const char* ws_host               = "baukoff.net";
 const int   ws_port               = 443;
 //const char* ws_host             = "alabino.ddns.net";
 //const int   ws_port             = 443;
@@ -127,10 +127,10 @@ void loop() {
 
   if (statusId == 1 && count >= wait ) {
     //Serial.println("======================================================================================");
-    tp = random(100, 800) / 10.0; 
-    //tp = ttRead(ds1);//+2;
-    to = random(100, 800) / 10.0; 
-    //to = ttRead(ds2);
+    //tp = random(100, 800) / 10.0; 
+    tp = ttRead(ds1);//+2;
+    //to = random(100, 800) / 10.0; 
+    to = ttRead(ds2);
     kw = 11; //
     pr = 2.34; //
     String msg = "{\"action\":\"datasend\", \"type\":\"koteldata\", \"data\":{ \"deviceId\":\"" + deviceId + "\", "
